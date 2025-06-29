@@ -1,0 +1,10 @@
+
+{% for product in products %}
+Product: {{ product.name }}
+Category: {{ product.category.name|default:"No category" }}
+Price: ${{ product.price }}
+Stock: {{ product.stock }}
+Description: {{ product.description }}
+---
+{% endfor %}
+{% if not products %}No products found matching your query.{% endif %}
