@@ -14,6 +14,7 @@ class SocialMediaUserAdmin(admin.ModelAdmin):
         'social_media_id',
         'customer_link',
         'avatar_preview',
+        'customer',
         'created_at'
     ]
     list_filter = ['platform', 'created_at']
@@ -21,7 +22,7 @@ class SocialMediaUserAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'avatar_preview', 'customer_link']
     fieldsets = (
         (_('Social Media Information'), {
-            'fields': ('name', 'platform', 'social_media_id', 'avatar_url', 'customer_link')
+            'fields': ('name', 'platform', 'social_media_id', 'avatar_url', 'customer_link', 'customer',)
         }),
         (_('Metadata'), {
             'fields': ('created_at', 'updated_at')
@@ -52,7 +53,7 @@ class SocialMediaUserAdmin(admin.ModelAdmin):
 
 @admin.register(Conversation)
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ('socialuser','auto_reply', 'created_at', 'updated_at')
+    list_display = ('id', 'user', 'socialuser','auto_reply', 'created_at', 'updated_at')
     list_filter = ('auto_reply', 'created_at', 'updated_at')
     search_fields = ('auto_reply', 'socialuser__name', 'socialuser__social_media_id')
     readonly_fields = ('created_at', 'updated_at')

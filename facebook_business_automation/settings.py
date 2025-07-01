@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
-    'a3df-103-99-177-138.ngrok-free.app', # temporary for testing webhook
+    '57df-103-99-176-51.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
 ]
 
@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'customer',
     'knowledge_base',
     'business',
+    'analytics',
 ]
 
 MIDDLEWARE = [

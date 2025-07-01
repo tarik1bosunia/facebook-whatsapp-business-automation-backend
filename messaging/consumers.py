@@ -58,7 +58,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
-        await self.close(code=1000)
+        await self.close(code=close_code)
 
     async def chat_message(self, event):
         """Broadcast message to all clients except sender."""

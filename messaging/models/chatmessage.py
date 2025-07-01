@@ -2,11 +2,7 @@ from django.db import models
 
 from messaging.models.conversation import Conversation
 from django.utils.translation import gettext_lazy as _
-
-class SENDER_CHOICES(models.TextChoices):
-    CUSTOMER = 'customer', _('Customer')
-    BUSINESS = 'business', _('Business')
-    AI = 'ai', _('AI')
+from messaging.enums import SENDER_CHOICES
 
 class ChatMessage(models.Model):
 
@@ -43,7 +39,6 @@ class ChatMessage(models.Model):
         blank=True, 
         null=True,
     )  # For contacts message type (stores entire contacts array)
-    # timestamp = models.DateTimeField()                        # Converted timestamp
 
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

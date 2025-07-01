@@ -4,13 +4,13 @@ from .models import Customer, Order
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'orders_count', 'total_spent', 'status', 'created_at')
+    list_display = ('id', 'user', 'name', 'email', 'phone', 'orders_count', 'total_spent', 'status', 'created_at')
     list_filter = ('status', 'created_at')
     search_fields = ('name', 'email', 'phone')
     readonly_fields = ('orders_count', 'total_spent', 'created_at', 'updated_at')
     fieldsets = (
         (None, {
-            'fields': ('name', 'email', 'phone', 'status')
+            'fields': ('user', 'name', 'email', 'phone', 'status')
         }),
         (_('Statistics'), {
             'fields': ('orders_count', 'total_spent')

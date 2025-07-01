@@ -19,7 +19,7 @@ pip install requests
 # [FUTURE PLAN](./guides/FUTURE_PLAN.md)
 
 
-# For python-magic on Linux
+### For python-magic on Linux
 ```sh
 pip install python-magic
 ```

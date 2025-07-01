@@ -7,12 +7,14 @@ from rest_framework import serializers
 from customer.models import Customer
 from messaging.models import SocialMediaUser
 
+
 class SocialMediaIDSerializer(serializers.Serializer):
     messenger = serializers.CharField(required=False, max_length=255)
     whatsapp = serializers.CharField(required=False, max_length=255)
     facebook = serializers.CharField(required=False, max_length=255)
     instagram = serializers.CharField(required=False, max_length=255)
     twitter = serializers.CharField(required=False, max_length=255)
+
 
 class CustomerWithSocialMediaSerializer(serializers.ModelSerializer):
     social_media_ids = SocialMediaIDSerializer(many=True, write_only=True)
@@ -23,7 +25,8 @@ class CustomerWithSocialMediaSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         social_media_data = validated_data.pop('social_media_ids', [])
-        customer = Customer.objects.create(**validated_data)
+        user = self.context['request'].user
+        customer = Customer.objects.create(user=user, **validated_data)
 
         self._process_social_media_data(customer, social_media_data)
         return customer
@@ -46,10 +49,15 @@ class CustomerWithSocialMediaSerializer(serializers.ModelSerializer):
                         platform=platform,
                         social_media_id=social_id
                     )
-                    # Update the existing one
-                    sm_user.customer = customer
-                    sm_user.name = customer.name
-                    sm_user.save(update_fields=['customer', 'name'])
+                    if sm_user.customer and sm_user.customer != customer:
+                        raise serializers.ValidationError({
+                            "social_media_ids": f"Social media ID '{social_id}' for platform '{platform}' is already linked to another customer."
+                        })
+                    else:
+                        # Update the existing one
+                        sm_user.customer = customer
+                        sm_user.name = customer.name
+                        sm_user.save(update_fields=['customer', 'name'])
                 except SocialMediaUser.DoesNotExist:
                     raise serializers.ValidationError({
                         "social_media_ids": f"Invalid social media ID '{social_id}' for platform '{platform}'."
@@ -93,7 +101,8 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         # First try to get avatar from social media accounts
-        social_avatar = obj.social_media_users.filter(avatar_url__isnull=False).first()
+        social_avatar = obj.social_media_users.filter(
+            avatar_url__isnull=False).first()
         if social_avatar:
             return social_avatar.avatar_url
 
@@ -105,5 +114,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         # Format the total_spent as float instead of string
         data['total_spent'] = float(data['total_spent'])
         # Format the created_at date
-        data['createdAt'] = localtime(instance.created_at).strftime("%Y-%m-%dT%H:%M:%S")
+        data['createdAt'] = localtime(
+            instance.created_at).strftime("%Y-%m-%dT%H:%M:%S")
         return data

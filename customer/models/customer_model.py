@@ -4,10 +4,15 @@ from django.utils.translation import gettext_lazy as _
 
 # TODO: phone and email need to make it unique so that more than 1 customer can not use same email and phone
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 class Customer(models.Model):
     class Status(models.TextChoices):
         ACTIVE = 'active', _('Active')
         INACTIVE = 'inactive', _('Inactive')
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="customers",)    
 
     name = models.CharField(
         max_length=100,

@@ -2,6 +2,7 @@ from messaging.services import websocket_service
 from rest_framework import viewsets, generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from ..models import Conversation, ChatMessage
 from ..serializers import ConversationSerializer, ChatMessageSerializer
@@ -10,32 +11,41 @@ from ..utils import facebook_api
 
 
 class ConversationViewSet(viewsets.ReadOnlyModelViewSet):  # Read-only for now
-    queryset = Conversation.objects.all().select_related('socialuser').prefetch_related('messages')
     serializer_class = ConversationSerializer
     pagination_class = None
+    permission_classes = [IsAuthenticated]
 
     # Optional: add filtering by channel or socialuser via query params
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Conversation.objects.filter(user=self.request.user)\
+            .select_related('socialuser')\
+            .prefetch_related('messages')
+
         socialuser_id = self.request.query_params.get('socialuser_id')
         channel = self.request.query_params.get('channel')
 
         if socialuser_id:
             queryset = queryset.filter(socialuser__id=socialuser_id)
         if channel:
-            queryset = queryset.filter(channel=channel)
+            # queryset = queryset.filter(channel=channel)
+            queryset = queryset.filter(socialuser__platform=channel)
 
         return queryset
+
 
 class ChatMessageViewSet(viewsets.ModelViewSet):
     queryset = ChatMessage.objects.all()
     serializer_class = ChatMessageSerializer
     pagination_class = None
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         conversation_id = self.request.query_params.get('conversation')
         if conversation_id:
-            return self.queryset.filter(conversation_id=conversation_id)
+            return self.queryset.filter(
+                conversation_id=conversation_id,
+                conversation__user=self.request.user
+            )
         return self.queryset.none()
 
 
