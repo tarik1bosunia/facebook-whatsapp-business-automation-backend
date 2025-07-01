@@ -10,6 +10,8 @@ urlpatterns = [
     # just test
     path('superadmin/', SuperAdminOnlyView.as_view()),
     path('businessman/', BusinessmanOnlyView.as_view()),
+
+    # superadmin
     path('users/', UserListView.as_view()),
 
 

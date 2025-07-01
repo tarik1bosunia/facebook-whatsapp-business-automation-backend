@@ -9,7 +9,7 @@ from rest_framework_simplejwt.views import (
 )
 
 from account.renderers import UserRenderer
-from account.serializers import CustomTokenObtainPairSerializer
+from account.serializers.auth import CustomTokenObtainPairSerializer
 from account.utils import Util
 
 

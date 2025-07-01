@@ -6,7 +6,7 @@ from django.contrib.auth import authenticate
 
 
 from account.renderers import UserRenderer
-from account.serializers import UserLoginSerializer
+from account.serializers.auth import UserLoginSerializer
 from account.utils import Util
 
 

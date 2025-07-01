@@ -7,7 +7,8 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 
 from account.renderers import UserRenderer
-from account.serializers import SendPasswordResetEmailSerializer, UserPasswordResetConfirmSerializer
+from account.serializers.email import SendPasswordResetEmailSerializer
+from account.serializers.password import UserPasswordResetConfirmSerializer
 from account.utils import Util
 
 

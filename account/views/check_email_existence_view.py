@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from account.renderers import UserRenderer
-from account.serializers import EmailCheckSerializer
+from account.serializers.email import EmailCheckSerializer
 
 from django.contrib.auth import get_user_model
 

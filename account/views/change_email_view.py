@@ -8,7 +8,7 @@ from django.utils import timezone
 from account.models import PendingEmailChange
 from account.renderers import UserRenderer
 
-from account.serializers import UserChangeEmailSerializer
+from account.serializers.email import UserChangeEmailSerializer
 
 
 class UserChangeEmailView(APIView):

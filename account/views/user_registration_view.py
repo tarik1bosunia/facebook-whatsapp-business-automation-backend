@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 
 
 from account.renderers import UserRenderer
-from account.serializers import UserRegistrationSerializer
+from account.serializers.auth import UserRegistrationSerializer
 from account.utils import Util
 
 
