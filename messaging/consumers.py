@@ -86,7 +86,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
             return
 
         if message_type == MessageTypes.NEW_MESSAGE.value:
-            payload = message_type = content.get("payload")
+            payload  = content.get("payload")
             if payload:
                 await self.handle_message(payload)
 
@@ -119,10 +119,6 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
                 }
             })
 
-            await self.send(text_data=json.dumps({
-                "type": "new_message",
-                "payload": message
-            }))
 
         except json.JSONDecodeError as e:
             print(f"Error decoding message: {str(e)}")
@@ -212,7 +208,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
                         "media_url": payload.get('media_url'),
                         "media_type": payload.get('media_type'),
                         "contacts": payload.get('contacts', []),
-                        "conversation_id": str(conversation_id),
+                        # "conversation_id": str(conversation_id),
                     }}),
                 'sender_channel': self.channel_name
             }

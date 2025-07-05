@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
-    '8888-103-99-177-138.ngrok-free.app', # temporary for testing webhook
+    '728b-103-99-177-138.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
 ]
 
@@ -264,7 +264,7 @@ EMAIL_USE_TLS = True
 SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'account.serializers.CustomTokenObtainPairSerializer',
 
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=20),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,

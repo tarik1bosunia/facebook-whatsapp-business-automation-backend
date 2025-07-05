@@ -45,7 +45,7 @@ def message_from_outside_consumer(conversation, sender, message_text, media_id=N
                     "media_url": media_url,
                     "media_type": media_type,
                     "contacts": contacts or [],
-                    "conversation_id": str(conversation.id),
+                    # "conversation_id": str(conversation.id),
                 }
 
             })

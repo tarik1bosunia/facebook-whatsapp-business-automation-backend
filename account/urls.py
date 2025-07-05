@@ -22,7 +22,6 @@ urlpatterns = [
 
 
     # auth
-    path('auth/verify/', views.VerifyUserView.as_view(), name="verify user"),
     path('auth/logout/', views.UserLogoutView.as_view(), name='logout'),
     path('auth/delete-account/',
          views.UserDeleteAccountView.as_view(), name='delete-account'),
@@ -49,7 +48,7 @@ urlpatterns = [
          views.UserPasswordResetConfirmView.as_view(), name='password-reset-confirm'),
 
 
-
+    path('token/verify/', views.VerifyUserView.as_view(), name="token_verify"),
     path('token/', views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', views.TokenRefreshView.as_view(), name='token_refresh'),
 ]

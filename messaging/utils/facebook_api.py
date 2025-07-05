@@ -3,7 +3,7 @@ from django.conf import settings
 from ..exceptions import FacebookAPIError
 
 def send_message(recipient_id, text):
-    url = "https://graph.facebook.com/v22.0/me/messages"
+    url = "https://graph.facebook.com/v23.0/me/messages"
     
     try:
         response = requests.post(
