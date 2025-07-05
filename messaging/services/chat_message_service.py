@@ -128,7 +128,7 @@ class ChatMessageService:
         )
         
         cls._send_websocket_notification(
-            conversation.id,
+            conversation,
             sender,
             message,
             media_id,
@@ -175,23 +175,23 @@ class ChatMessageService:
     @classmethod
     def _send_websocket_notification(
         cls,
-        conversation_id: int,
+        conversation: Conversation,
         sender: str,
         message: Optional[str],
         media_id: Optional[str],
         media_type: Optional[str],
         contacts: Optional[List[Contact]],
-        media_url: Optional[str]
+        media_url: Optional[str],
     ):
         """Send consistent websocket notifications."""
         websocket_service.message_from_outside_consumer(
-            conversation_id=conversation_id,
+            conversation=conversation,
             sender=sender,
-            message=message,
+            message_text=message,
             media_id=media_id,
             media_type=media_type,
             contacts=contacts,
-            media_url=media_url
+            media_url=media_url,
         )
 
     @classmethod

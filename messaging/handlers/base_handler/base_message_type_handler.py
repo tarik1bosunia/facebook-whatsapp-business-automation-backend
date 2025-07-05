@@ -4,12 +4,13 @@ from typing import Dict, Optional
 from chatbot.utils import ChatBotUtil
 from messaging.models.conversation import Conversation
 from messaging.models.user import SocialMediaUser
-from messaging.services import whatsapp_service
+from messaging.services import conversation_service, socialuser_service, whatsapp_service
 from messaging.services.chat_message_service import ChatMessageService
 from messaging.models import SENDER_CHOICES, PLATFORM
 
 class BaseMessageTypeHandler(ABC):
     def __init__(self):
+        self.user = None
         self.socialuser = None
         self.conversation = None
         self.sender = None # WhatsApp sender ID
@@ -22,23 +23,14 @@ class BaseMessageTypeHandler(ABC):
         self.reply_message_for_user = None
 
     def set_socialuser_conversation(self):
-        socialuser, created = SocialMediaUser.objects.get_or_create(
-            social_media_id=self.sender,
-            platform=PLATFORM.WHATSAPP,
-            defaults={'name': self.name or self.sender}
-        )
+        self.socialuser = socialuser_service.get_or_create_socialuser(social_media_id=self.sender, platform=PLATFORM.WHATSAPP)
+        self.conversation = conversation_service.get_or_create_conversation(user=self.user, socialuser=self.socialuser )
+        #  TODO: I have to update the name of the social media user
 
-        if not created and self.name and socialuser.name != self.name:
-            socialuser.name = self.name
-            socialuser.save()
+        # if self.name and socialuser.name != self.name:
+        #     socialuser.name = self.name
+        #     socialuser.save()
 
-        conversation, _ = Conversation.objects.get_or_create(
-            socialuser=socialuser,
-            defaults={'auto_reply': True}
-        )
-
-        self.socialuser = socialuser
-        self.conversation = conversation
 
     @abstractmethod
     def extract_fields(self, message: Dict)-> None:
@@ -87,10 +79,11 @@ class BaseMessageTypeHandler(ABC):
         )
 
 
-    def handle(self, message: Dict, sender: str, message_type: str, name: Optional[str] = None):
+    def handle(self, message: Dict, sender: str, message_type: str, name: Optional[str] = None, user= None):
         self.sender = sender
         self.media_type = message_type
         self.name = name
+        self.user = user
 
         self.extract_fields(message=message)
         self.set_socialuser_conversation()

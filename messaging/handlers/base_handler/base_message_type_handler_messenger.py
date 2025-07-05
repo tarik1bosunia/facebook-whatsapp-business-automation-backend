@@ -9,8 +9,10 @@ from messaging.services.chat_message_service import ChatMessageService
 from messaging.models import SENDER_CHOICES, PLATFORM
 from messaging.utils import facebook_api
 
+
 class BaseMessageTypeHandlerMessenger(ABC):
     def __init__(self):
+        self.user = None
         self.socialuser = None
         self.conversation = None
         self.sender = None # Messenger sender ID
@@ -26,7 +28,7 @@ class BaseMessageTypeHandlerMessenger(ABC):
 
     def set_socialuser_conversation(self):
         socialuser = socialuser_service.get_or_create_socialuser(social_media_id=self.sender, platform=PLATFORM.FACEBOOK)
-        conversation = conversation_service.get_or_create_conversation(socialuser)
+        conversation = conversation_service.get_or_create_conversation(user=self.user, socialuser=socialuser )
 
         self.socialuser = socialuser
         self.conversation = conversation
@@ -83,10 +85,11 @@ class BaseMessageTypeHandlerMessenger(ABC):
         # )
 
 
-    def handle(self, message: Dict, sender: str, message_type: str, name: Optional[str] = None):
+    def handle(self, message: Dict, sender: str, message_type: str, name: Optional[str] = None, user = None):
         self.sender = sender
         self.media_type = message_type
         self.name = name
+        self.user = user
 
         self.extract_fields(message=message)
         self.set_socialuser_conversation()

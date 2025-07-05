@@ -13,13 +13,13 @@ from ..utils import facebook_api
 import logging
 from ..exceptions import WebhookVerificationError
 logger = logging.getLogger(__name__)
+from business.models import FacebookIntegration
 
 from messaging.handlers.message_type_handlers_messenger import TextMessageHandler, AttachmentsMessageHandler
 
 # TODO: need to handle all type of attachments(image, audio, video, document) also
 class MessengerHandler(BaseWebHookHandler):
     def __init__(self):
-        super().__init__(settings.FB_VERIFY_TOKEN)
 
         self.handlers = {
             'text': TextMessageHandler,
@@ -47,6 +47,17 @@ class MessengerHandler(BaseWebHookHandler):
 
     def _process_entries(self, entries):
         for entry in entries:
+            time = entry.get("time")
+            facebook_page_id = entry.get("id")
+            facebook_integration = FacebookIntegration.objects.get(platform_id=facebook_page_id)
+            if not facebook_integration:
+                print("no facebook integration found!")
+                return
+            self.user = facebook_integration.user
+
+            print("FACEBOOK PAGE ID::", facebook_page_id)
+            
+
             for event in entry.get('messaging', []):
                 if event.get('message'):
                     self._handle_message_event(event)
@@ -71,7 +82,9 @@ class MessengerHandler(BaseWebHookHandler):
         #     handler_class = self.handlers.get('unsupported')
 
         handler = handler_class()
-        handler.handle(message=message, sender=sender, message_type=message_type, name=name)
+
+        # TODO: may be need to pass user herer
+        handler.handle(message=message, sender=sender, message_type=message_type, name=name, user=self.user)
         #  ============= NEW ++++++++++++++++++++++++
 
         # if 'text' in message:

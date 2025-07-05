@@ -13,6 +13,8 @@ from .change_email_view import UserChangeEmailView, VerifyEmailChangeView
 
 from .check_email_existence_view import CheckEmailExistenceAPIView
 
+from .user import UserViewSet
+
 
 __all__ = [
     'TokenObtainPairView', 'TokenRefreshView', 'VerifyUserView',
@@ -20,5 +22,7 @@ __all__ = [
      'UserRegistrationView', 'UserLogoutView', 'UserDeleteAccountView', 'UserLoginView', 'UserProfileView',
     'SendPasswordResetEmailView', 'UserPasswordResetConfirmView', 'UserChangePasswordView',
     'UserChangeEmailView', 'VerifyEmailChangeView', 'CheckEmailExistenceAPIView',
+
+    "UserViewSet",
 
 ]

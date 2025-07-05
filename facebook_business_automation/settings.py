@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
-    '57df-103-99-176-51.ngrok-free.app', # temporary for testing webhook
+    '8888-103-99-177-138.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
 ]
 
@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
 
+    'utils',
     'account',
     'messaging',
     'facebook',

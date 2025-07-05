@@ -8,6 +8,7 @@
 - Currently don't have polls support for whatsapp so I can't implement it.
 - only with refresh token can access those route(but is_email_active also need to be true)
 - currently sent message implemented by http request , need to convet it into websocket(major task)
+- need to work with time in settings.py
 
 # TODO for production
 ### 1. change channels layer settings in settings.py to 
@@ -37,3 +38,7 @@ ALLOWED_FRONTEND_DOMAINS = [
     # add other allowed frontend domains
 ]
 ```
+
+# Possible improvements
+1. here the code only work for a single page in facebook  & wahtsapp work for single business
+

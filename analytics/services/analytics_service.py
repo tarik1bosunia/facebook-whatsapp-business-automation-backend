@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from django.db.models import Count
-from ..models import Conversation, ChatMessage
+
+from messaging.models.conversation import Conversation
 
 class AnalyticsService:
     @staticmethod

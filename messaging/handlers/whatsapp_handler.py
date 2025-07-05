@@ -21,12 +21,10 @@ from .message_type_handlers_whatsapp import (
     ContactsMessageHandler,
     UnsupportedMessageHandler
 )
-
+from business.models import WhatsAppIntegration
 
 class WhatsAppHandler(BaseWebHookHandler):
     def __init__(self):
-        super().__init__(settings.WHATSAPP_VERIFY_TOKEN)
-
         self.handlers = {
             'text': TextMessageHandler,
             'image': MediaMessageHandler,
@@ -63,6 +61,7 @@ class WhatsAppHandler(BaseWebHookHandler):
         """Process each entry in the webhook payload"""
         try:
             for change in entry.get('changes', []):
+                
                 if change.get('field') == 'messages':
                     self._process_message_change(change['value'])
         except Exception as e:
@@ -70,8 +69,19 @@ class WhatsAppHandler(BaseWebHookHandler):
 
     def _process_message_change(self, message_data: Dict) -> None:
         """Route message to appropriate handler"""
+        metadata = message_data.get("metadata", {})
         messages = message_data.get('messages', [])
         contacts = message_data.get('contacts', [])
+        phone_number_id = metadata.get("phone_number_id")
+        if not phone_number_id:
+            raise ValueError("Missing phone_number_id in metadata")
+        
+        integration = WhatsAppIntegration.objects.filter(platform_id=phone_number_id).first()
+        if not integration:
+            raise ValueError(f"No WhatsAppIntegration found for phone_number_id {phone_number_id}")
+        
+        self.user = integration.user
+
         if not messages:
             return
         
@@ -96,7 +106,7 @@ class WhatsAppHandler(BaseWebHookHandler):
             handler_class = self.handlers.get('unsupported')
 
         handler = handler_class()
-        handler.handle(message=message, sender=sender, message_type=message_type, name=name)
+        handler.handle(message=message, sender=sender, message_type=message_type, name=name, user=self.user)
 
 
     def _validate_request(self, request):

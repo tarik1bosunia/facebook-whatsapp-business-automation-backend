@@ -1,7 +1,8 @@
 from ..models import Conversation, ChatMessage
 
-def get_or_create_conversation(socialuser):
+def get_or_create_conversation(user, socialuser):
     conversation, created = Conversation.objects.get_or_create(
+        user=user,
         socialuser=socialuser,
         defaults={
             'auto_reply': True  # Default to auto-reply enabled

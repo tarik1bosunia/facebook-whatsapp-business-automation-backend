@@ -32,3 +32,44 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'category', 'user', 'price', 'stock', 'created_at')
     search_fields = ('name',)
     list_filter = ('category', 'user')
+
+
+
+
+from .models import FacebookIntegration, WhatsAppIntegration
+
+
+@admin.register(FacebookIntegration)
+class FacebookIntegrationAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'platform_id',
+        'verify_token',
+        'is_connected',
+        'is_send_auto_reply',
+        'is_send_notification',
+        'created_at',
+        'updated_at',
+    )
+    search_fields = ('user__email', 'platform_id', 'verify_token')
+    list_filter = ('is_connected', 'is_send_auto_reply', 'is_send_notification')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(WhatsAppIntegration)
+class WhatsAppIntegrationAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'platform_id',
+        'verify_token',
+        'is_connected',
+        'is_send_auto_reply',
+        'is_send_notification',
+        'created_at',
+        'updated_at',
+    )
+    search_fields = ('user__email', 'platform_id', 'verify_token')
+    list_filter = ('is_connected', 'is_send_auto_reply', 'is_send_notification')
+    readonly_fields = ('created_at', 'updated_at')
+
+

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .services.analytics_service import AnalyticsService
+from ..services.analytics_service import AnalyticsService
 
 class ConversationAnalyticsView(APIView):
     permission_classes = [IsAuthenticated]
