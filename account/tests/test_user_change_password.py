@@ -70,3 +70,26 @@ class TestUserChangePassword(APITestCase):
             'new_password': 'NewPassword456'
         }, **headers)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_password_change_with_too_short_password(self):
+        headers = self.get_auth_headers()
+        response = self.client.post(self.url, {
+            'old_password': 'OldPassword123',
+            'new_password': 'short'  # Less than 8 characters
+        }, **headers)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('new_password', response.data)
+        self.assertEqual(
+            response.data['new_password'][0],
+            'Password must be at least 8 characters long.'
+        )
+
+    def test_password_change_with_minimum_length_password(self):
+        headers = self.get_auth_headers()
+        response = self.client.post(self.url, {
+            'old_password': 'OldPassword123',
+            'new_password': 'Exactly8'  # Exactly 8 characters
+        }, **headers)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('Exactly8'))

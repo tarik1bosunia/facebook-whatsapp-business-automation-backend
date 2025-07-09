@@ -1,14 +1,21 @@
 from rest_framework import serializers
 
-class UserChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(max_length=255, style={'input_type': 'password'}, write_only=True)
-    new_password = serializers.CharField(max_length=255, style={'input_type': 'password'}, write_only=True)
 
+class UserChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(
+        max_length=255, style={'input_type': 'password'}, write_only=True)
+    new_password = serializers.CharField(
+        max_length=255, style={'input_type': 'password'}, write_only=True)
 
     def validate(self, attrs):
         old_password = attrs.get('old_password')
         new_password = attrs.get('new_password')
         user = self.context.get('user')
+
+        if len(new_password) < 8:
+            raise serializers.ValidationError({
+                'new_password': 'Password must be at least 8 characters long.'
+            })
 
         # Check if new password is different
         if old_password == new_password:
@@ -21,12 +28,11 @@ class UserChangePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'old_password': 'Old password is incorrect.'
             })
-            
+
         return attrs
-    
+
     def save(self, **kwargs):
         user = self.context['user']
         new_password = self.validated_data['new_password']
         user.set_password(new_password)
         user.save()
-

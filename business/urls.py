@@ -11,10 +11,12 @@ router.register(r'business-hours', BusinessHoursViewSet, basename='business-hour
 router.register(r'categories', ProductCategoryViewSet, basename='category')
 router.register(r'products', ProductViewSet, basename='product')
 
+# app_name = 'integrations'
+
 urlpatterns = [
-    path('business-profile/', BusinessProfileView.as_view(), name='business-profile'),
-    path('facebook/', FacebookIntegrationView.as_view(), name='facebook-integration'),
-    path('whatsapp/', WhatsAppIntegrationView.as_view(), name='whatsapp-integration'),
-    
     path('', include(router.urls)),
+    path('business-profile/', BusinessProfileView.as_view(), name='business-profile'),
+    path('facebook-integration/', FacebookIntegrationView.as_view(), name='facebook-integration'),
+    path('whatsapp-integration/', WhatsAppIntegrationView.as_view(), name='whatsapp-integration'),
+    
 ]
