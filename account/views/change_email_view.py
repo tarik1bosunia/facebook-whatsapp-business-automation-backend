@@ -1,8 +1,7 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
+from account.permissions import IsAuthenticatedAndVerified
 from django.utils import timezone
 
 from account.models import PendingEmailChange
@@ -13,7 +12,7 @@ from account.serializers.email import UserChangeEmailSerializer
 
 class UserChangeEmailView(APIView):
     renderer_classes = [UserRenderer]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedAndVerified]
 
     def put(self, request):
         serializer = UserChangeEmailSerializer(data=request.data, context={'request': request})

@@ -15,6 +15,8 @@ class ChatAgent:
     def __init__(self, user, conversation=None):
         self.user = user
         self.conversation = conversation
+        print("====================== from ChatAgent ====================")
+        print("user", self.user)
 
         self.llm = ChatGoogleGenerativeAI(
             google_api_key=GEMINI_API_KEY,

@@ -22,10 +22,10 @@ python manage.py runserver 8000
 ```sh
 ngrok http http://127.0.0.1:8000
 ```
-## https://728b-103-99-177-138.ngrok-free.app -> http://localhost:8000
+## https://9c27c1ec139a.ngrok-free.app -> http://localhost:8000
 
 ## webhook setup url on facebook messenger
--  https://728b-103-99-177-138.ngrok-free.app/api/messaging/webhook/messenger/
+-  https://9c27c1ec139a.ngrok-free.app/api/messaging/webhook/messenger/
 ## webhook setup url on whatsapp
 - https://business.facebook.com/latest/settings/system_users?business_id=1786552525544080&selected_user_id=61576759232765
 - https://728b-103-99-177-138.ngrok-free.app/api/messaging/webhook/whatsapp/

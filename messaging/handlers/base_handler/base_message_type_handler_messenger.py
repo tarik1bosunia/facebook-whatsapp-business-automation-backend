@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
+from chatbot.services.llm.agents import ChatAgent
 from chatbot.utils import ChatBotUtil
 from messaging.models.conversation import Conversation
 from messaging.models.user import SocialMediaUser
@@ -43,7 +44,10 @@ class BaseMessageTypeHandlerMessenger(ABC):
 
     def generate_auto_reply(self) -> Optional[str]:
         """Subclasses can override this to add AI or business logic"""
-        return ChatBotUtil.chat_with_gemini(prompt=self.message).text
+        # return ChatBotUtil.chat_with_gemini(prompt=self.message).text
+        agent = ChatAgent(user=self.user, conversation=self.conversation)
+        ai_response = agent.get_response(self.message)
+        return ai_response
     
     def should_auto_reply(self) -> bool:
         """Override in subclasses if auto-reply should be skipped."""

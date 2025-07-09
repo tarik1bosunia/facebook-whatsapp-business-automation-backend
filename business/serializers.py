@@ -57,9 +57,10 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 class ProductSerializer(serializers.ModelSerializer):
+    category_name = serializers.SerializerMethodField()
     class Meta:
         model = Product
-        fields = ['id', 'category', 'name', 'description', 'price', 'stock', 'created_at', 'updated_at']
+        fields = ['id', 'category', 'category_name', 'name', 'description', 'price', 'stock', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
@@ -67,6 +68,9 @@ class ProductSerializer(serializers.ModelSerializer):
         # Automatically set the user from the request
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+    
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
 
 
 # service

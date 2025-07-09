@@ -1,7 +1,7 @@
 # views.py
 from rest_framework import viewsets, permissions, status, generics, filters
 from business.models import BusinessProfile, BusinessHours
-from .serializers import BusinessProfileSerializer, BusinessHoursSerializer
+from ..serializers import BusinessProfileSerializer, BusinessHoursSerializer
 from rest_framework.response import Response
 
 from rest_framework.exceptions import ValidationError
@@ -97,94 +97,8 @@ class BusinessHoursViewSet(viewsets.ModelViewSet):
 
 
 
- # integrations/views.py
-
-from .models import FacebookIntegration, WhatsAppIntegration
-from .serializers import FacebookIntegrationSerializer, WhatsAppIntegrationSerializer
-
-# integrations/views.py
-
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
-
-
-class BaseIntegrationView(generics.RetrieveUpdateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
-    model_class = None  # Must be set by subclass
-
-    def get_object(self):
-        # Ensure configuration exists for the user
-        config, created = self.model_class.objects.get_or_create(user=self.request.user)
-        return config
-
-    def put(self, request, *args, **kwargs):
-        """Allow full updates (overwrites all fields except timestamps/user)"""
-        return self.update(request, *args, **kwargs)
-
-    def patch(self, request, *args, **kwargs):
-        """Allow partial updates (single field or a few)"""
-        return self.partial_update(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        """Return the current integration config"""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data, status=HTTP_200_OK)
 
 
 
-class FacebookIntegrationView(BaseIntegrationView):
-    serializer_class = FacebookIntegrationSerializer
-    model_class = FacebookIntegration
 
-
-class WhatsAppIntegrationView(BaseIntegrationView):
-    serializer_class = WhatsAppIntegrationSerializer
-    model_class = WhatsAppIntegration
-
-
-#  Procut
-
-from .models import ProductCategory, Product
-from .serializers import ProductCategorySerializer, ProductSerializer
-from account.renderers import UserRenderer
-from account.permissions import IsBusinessman
-from django_filters.rest_framework import DjangoFilterBackend
-
-class ProductCategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = ProductCategorySerializer
-    permission_classes = [IsBusinessman]
-    renderer_classes = [UserRenderer]
-    pagination_class = None
-
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['name']
-    filterset_fields = ['name']
-
-
-    def get_queryset(self):
-        return ProductCategory.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
-class ProductViewSet(viewsets.ModelViewSet):
-    serializer_class = ProductSerializer
-    permission_classes = [IsBusinessman]
-    renderer_classes = [UserRenderer]
-    pagination_class = None
-
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
-    search_fields = ['name', 'description', 'category__name']
-    filterset_fields = ['category', 'stock']
-    ordering_fields = ['price', 'stock', 'created_at']
-
-    
-    def get_queryset(self):
-        return Product.objects.filter(user=self.request.user)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 

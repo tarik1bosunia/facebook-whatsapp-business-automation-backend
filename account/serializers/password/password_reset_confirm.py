@@ -63,12 +63,12 @@ class UserPasswordResetConfirmSerializer(serializers.Serializer):
             })
             
         # Check if password was changed after token was generated
-        if self.user.last_password_change:
-            token_created_at = token_generator.get_token_timestamp(self.user, token)
-            if token_created_at < self.user.last_password_change.timestamp():
-                raise serializers.ValidationError({
-                    'token': 'This reset link has already been used.'
-                })
+        # if self.user.last_password_change:
+        #     token_created_at = token_generator.get_token_timestamp(self.user, token)
+        #     if token_created_at < self.user.last_password_change.timestamp():
+        #         raise serializers.ValidationError({
+        #             'token': 'This reset link has already been used.'
+        #         })
 
         return attrs
 

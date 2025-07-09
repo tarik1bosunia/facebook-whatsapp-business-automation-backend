@@ -38,7 +38,7 @@ urlpatterns = [
          name='check-email'),
     path('registration/', views.UserRegistrationView.as_view(), name='registration'),
     path('activate/<str:uid>/<str:token>/',
-         views.ActivateUserEmailView.as_view(), name="activate user email"),
+         views.ActivateUserEmailView.as_view(), name="activate-user-email"),
     path('login/', views.UserLoginView.as_view(), name='login'),
     path('verify-email-change/<str:token>/',
          views.VerifyEmailChangeView.as_view(), name='verify-email-change',),

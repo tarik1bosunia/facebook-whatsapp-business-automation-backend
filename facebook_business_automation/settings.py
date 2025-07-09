@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
-    '728b-103-99-177-138.ngrok-free.app', # temporary for testing webhook
+    '9c27c1ec139a.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
 ]
 
@@ -233,6 +233,17 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # 'EXCEPTION_HANDLER': 'account.exception_handler.custom_exception_handler',
+
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+
+    'DEFAULT_THROTTLE_RATES': {
+        'password_reset_confirm': '3/minute',  # max 3 requests per minute on this view
+        'password_reset': '10/minute',
+        # other scopes...
+    },
 
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',

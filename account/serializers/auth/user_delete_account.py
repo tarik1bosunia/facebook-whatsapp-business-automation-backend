@@ -10,14 +10,18 @@ class UserDeleteAccountSerializer(serializers.Serializer):
     password = serializers.CharField(max_length=255, style={'input_type': 'password'}, write_only=True)
 
     def validate(self, attrs):
-        email = attrs['email']
+        request_user = self.context['request'].user
+        email = attrs['email'].lower().strip()
         password = attrs['password']
 
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             raise serializers.ValidationError({'email': 'User with this email does not exist'})
         
+        if user != request_user:
+            raise serializers.ValidationError({'email': 'You can only delete your own account'})
+
         if not user.check_password(password):
             raise serializers.ValidationError({'password': 'Incorrect password'})
         

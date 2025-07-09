@@ -3,6 +3,7 @@
 - apply websocket
 
 # TODO imidiate
+-  I have to handle a issue ... without email verified i can't access user any of the api without sent email verification
 - timestamp field may be need to add in ChatMessage model so need to change code according it both frontend and backend
 - message_type may be need to add for ChatMessage 
 - Currently don't have polls support for whatsapp so I can't implement it.

@@ -76,7 +76,7 @@ class UserPasswordResetConfirmView(APIView):
 
     def post(self, request, uid=None, token=None, format=None):
         # Validate required parameters
-        if not uid or not token:
+        if not uid or not token or uid == 'null' or token == 'null':
             return Response(
                 {'error': 'Reset token missing in URL.'},
                 status=status.HTTP_400_BAD_REQUEST

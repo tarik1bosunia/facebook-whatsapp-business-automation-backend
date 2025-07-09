@@ -12,7 +12,7 @@ class UserDeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
-        serializer = UserDeleteAccountSerializer(data=request.data)
+        serializer = UserDeleteAccountSerializer(data=request.data, context={'request': request})
 
         if serializer.is_valid():
             user = serializer.validated_data['user']
