@@ -14,7 +14,6 @@ class BaseIntegrationView(generics.RetrieveUpdateAPIView):
     """
     permission_classes = [IsAuthenticatedAndVerified]
     model_class = None  # Must be set by subclass
-    renderer_classes = [UserRenderer]
 
     def get_queryset(self):
         if self.model_class is None:
