@@ -13,10 +13,9 @@ from account.renderers import UserRenderer
 User = get_user_model()
 
 class ActivateUserEmailView(APIView):
-    renderer_classes = [UserRenderer]
     permission_classes = [AllowAny]
     
-    def get(self, request, uid, token):
+    def post(self, request, uid, token):
         try:
             # Decode the uid
             uid = urlsafe_base64_decode(uid).decode()

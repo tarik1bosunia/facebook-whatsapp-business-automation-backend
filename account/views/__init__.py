@@ -15,6 +15,9 @@ from .check_email_existence_view import CheckEmailExistenceAPIView
 
 from .user import UserViewSet
 
+from .user_verification_status_view import UserVerificationStatusView
+from .resend_verification_email_view import ResendVerificationEmailView
+
 
 __all__ = [
     'TokenObtainPairView', 'TokenRefreshView', 'VerifyUserView',
@@ -22,6 +25,9 @@ __all__ = [
      'UserRegistrationView', 'UserLogoutView', 'UserDeleteAccountView', 'UserLoginView', 'UserProfileView',
     'SendPasswordResetEmailView', 'UserPasswordResetConfirmView', 'UserChangePasswordView',
     'UserChangeEmailView', 'VerifyEmailChangeView', 'CheckEmailExistenceAPIView',
+
+    "UserVerificationStatusView", "ResendVerificationEmailView",
+
 
     "UserViewSet",
 

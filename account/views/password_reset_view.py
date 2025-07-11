@@ -14,7 +14,6 @@ from account.utils import Util
 
 
 class SendPasswordResetEmailView(APIView):
-    renderer_classes = [UserRenderer]
     throttle_scope = 'password_reset'  # Add throttling to prevent abuse
 
     def post(self, request, format=None):
@@ -37,7 +36,7 @@ class SendPasswordResetEmailView(APIView):
 
         # Always return same response regardless of email existence
         return Response(
-            {'msg': 'If this email is registered, you will receive a password reset link shortly.'},
+            {'message': 'If this email is registered, you will receive a password reset link shortly.'},
             status=status.HTTP_200_OK
         )
     

@@ -32,6 +32,15 @@ urlpatterns = [
     path('auth/profile/', views.UserProfileView.as_view(),
          name='profile'),  # both get and update profile
 
+    path('auth/verification-status/',
+         views.UserVerificationStatusView.as_view(), name='verification-status'),
+
+    path(
+        'auth/resend-verification-email/',
+        views.ResendVerificationEmailView.as_view(),
+        name='resend-verification-email'
+    ),
+
 
     # without authentication needed
     path('check-email/', views.CheckEmailExistenceAPIView.as_view(),

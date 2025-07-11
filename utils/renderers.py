@@ -46,5 +46,4 @@ class CustomRenderer(JSONRenderer):
         else:
             response_dict = data
 
-        # ✅ Use DjangoJSONEncoder here to handle datetime etc.
         return json.dumps(response_dict, ensure_ascii=False, cls=DjangoJSONEncoder).encode(self.charset)

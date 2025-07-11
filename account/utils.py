@@ -7,11 +7,13 @@ import os
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from account.enums import AuthProvider
 from account.models import User
 
 from urllib.parse import urlparse
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AnonymousUser
 
 
 class Util:
@@ -155,4 +157,23 @@ class Util:
     def get_frontend_base_url(request):
         """Get frontend base URL from request header or use default."""
         frontend_url = request.META.get('HTTP_X_FRONTEND_BASE_URL', settings.FRONTEND_BASE_URL)
-        return Util._validate_frontend_url(frontend_url)    
+        return Util._validate_frontend_url(frontend_url)   
+
+    
+    def is_user_verified(user: User):
+        """
+        Check if a user is verified based on their authentication provider.
+        
+        Args:
+            user: The user object to check (can be None or AnonymousUser)
+            
+        Returns:
+            bool: True if user is verified, False otherwise
+        """
+        if user is None or isinstance(user, AnonymousUser):
+            return False
+        
+        if user.auth_provider == AuthProvider.EMAIL:
+            return user.is_email_verified
+        # All other auth providers are considered verified
+        return True

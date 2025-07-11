@@ -40,7 +40,7 @@ class SendPasswordResetEmailViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('msg', response.data)
-        self.assertEqual(response.data['msg'], 'If this email is registered, you will receive a password reset link shortly.')
+        self.assertEqual(response.data['message'], 'If this email is registered, you will receive a password reset link shortly.')
         mock_send_email.assert_called_once()
 
         # Check email_data passed to send_email
