@@ -21,17 +21,25 @@ python manage.py runserver 8000
 ## 3. Start ngrok on the same port
 ```sh
 ngrok http http://127.0.0.1:8000
+ngrok http --domain=myapp.ngrok-free.app 8000
 ```
-## https://9c27c1ec139a.ngrok-free.app -> http://localhost:8000
+# static/percistent domain ngrok
+```sh
+ngrok http --domain=fitting-ladybug-mistakenly.ngrok-free.app 8000
+```
+## https://fitting-ladybug-mistakenly.ngrok-free.app -> http://localhost:8000
 
 ## webhook setup url on facebook messenger
--  https://9c27c1ec139a.ngrok-free.app/api/messaging/webhook/messenger/
+-  https://fitting-ladybug-mistakenly.ngrok-free.app/api/messaging/webhook/messenger/
+-  https://612498680b28.ngrok-free.app/api/messaging/webhook/messenger/
+- https://developers.facebook.com/apps/1405936334088402/webhooks/?business_id=1786552525544080
 ## webhook setup url on whatsapp
-- https://business.facebook.com/latest/settings/system_users?business_id=1786552525544080&selected_user_id=61576759232765
+- https://fitting-ladybug-mistakenly.ngrok-free.app/api/messaging/webhook/whatsapp/
 - https://728b-103-99-177-138.ngrok-free.app/api/messaging/webhook/whatsapp/
+- https://business.facebook.com/latest/settings/system_users?business_id=1786552525544080&selected_user_id=61576759232765
+- https://developers.facebook.com/apps/686555444118209/whatsapp-business/wa-settings/?business_id=1786552525544080
 
 # common
--  https://23a6-37-111-230-102.ngrok-free.app
 -  https://developers.facebook.com/apps/686555444118209/whatsapp-business/wa-settings/?business_id=1786552525544080
 -  https://developers.facebook.com/apps/1405936334088402/webhooks/?business_id=1786552525544080
 

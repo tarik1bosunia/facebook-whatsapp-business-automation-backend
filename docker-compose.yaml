@@ -1,0 +1,93 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker compose reference guide at
+# https://docs.docker.com/compose/compose-file/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+name: fbaserver
+services:
+  server:
+#    restart: unless-stopped
+#    image: ghcr.io/<USERNAME>/<REPO_NAME>/server:latest
+    image: ghcr.io/tarik1bosunia/fbaserver:latest
+    container_name: fbaserver-container
+    # restart: unless-stopped
+    build:
+      context: .
+    volumes:
+      - .:/app
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      # - ./model_cache:/app/model_cache 
+
+    env_file:
+      - ./.env
+    ports:
+      - 8000:8000
+
+# The commented out section below is an example of how to define a PostgreSQL
+# database that your application can use. `depends_on` tells Docker Compose to
+# start the database before your application. The `db-data` volume persists the
+# database data between container restarts. The `db-password` secret is used
+# to set the database password. You must create `db/password.txt` and add
+# a password of your choosing to it before running `docker compose up`.
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:  #  Wait for Redis to be ready before starting server
+        condition: service_started  
+    environment:
+      # Ensure these variables match the DATABASES setting in your Django settings.py file
+      - DB_NAME=fbadb
+      - DB_USER=postgres
+      - DB_PASSWORD_FILE=/run/secrets/db-password
+      - DB_HOST=db  # This should be the service name of the PostgreSQL container
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0  # Redis connection URL
+      # - DJANGO_SETTINGS_MODULE=your_project.settings.production
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  db:
+    image: pgvector/pgvector:pg17 # https://hub.docker.com/r/pgvector/pgvector
+    container_name: fba-postgres-container
+    restart: always
+    user: postgres
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql  # Load pgvector extension
+    environment:
+      - POSTGRES_DB=fbadb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    # image: redis:7.4.5-alpine3.21
+    image: redis/redis-stack-server:7.2.0-v18
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped    
+volumes:
+  db-data:
+  redis-data:
+secrets:
+  db-password:
+    file: db/password.txt

@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
-    '9c27c1ec139a.ngrok-free.app', # temporary for testing webhook
+    'fitting-ladybug-mistakenly.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
 ]
 
@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'knowledge_base',
     'business',
     'analytics',
+    'llm_integration',
 ]
 
 MIDDLEWARE = [
@@ -104,15 +105,59 @@ TEMPLATES = [
 ASGI_APPLICATION = 'facebook_business_automation.asgi.application'
 
 
+# ============================= DATABASE SETTINGS ====================================
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
+
+
+def get_secret(path):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except IOError:
+        return None
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'fbadb',
+#         'USER': 'tata',
+#         'PASSWORD': '11235813',
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
+#         'OPTIONS': {
+#             'options': '-c search_path=fbadbschema'
+#         },
+#     }
+# }
+
+# docker
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fbadb',  # Matches POSTGRES_DB
+        'USER': 'postgres',  # Matches POSTGRES_USER
+        # 'PASSWORD': os.getenv('DB_PASSWORD', 'my_secret_password'),  # Load from env variable or leave as an empty string
+        'PASSWORD': get_secret('/run/secrets/db-password') or os.environ.get('DB_PASSWORD',),
+        'HOST': 'db',  # Docker service name
+        'PORT': '5432',  # PostgreSQL default port
+        'URL': 'postgresql://your_db_user:your_db_password@localhost:5432/your_db_name'
     }
 }
+
+# ============================= REDIS SETTINGS ====================================
+# Redis settings for caching and message history
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
 
 # Password validation
@@ -138,13 +183,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
-USE_TZ = True
-
+USE_TZ = True  # Always recommended to keep True
+TIME_ZONE = 'UTC'
+# TIME_ZONE = 'Asia/Dhaka'  # Set to your actual local time zone
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -238,11 +280,22 @@ REST_FRAMEWORK = {
 
 
 # ======================= WEBSOCKET =====================
+# local development
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer"
     }
 }
+
+# production
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [("127.0.0.1", 6379)],
+#         },
+#     },
+# }
 
 
 AUTH_USER_MODEL = "account.User"
@@ -258,7 +311,7 @@ EMAIL_USE_TLS = True
 SIMPLE_JWT = {
     'TOKEN_OBTAIN_SERIALIZER': 'account.serializers.CustomTokenObtainPairSerializer',
 
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -306,7 +359,7 @@ SOCIAL_AUTH_PASSWORD = os.environ.get('SOCIAL_AUTH_PASSWORD')
 
 
 
-# logger settings
+# ========================= LOGGER SETTINGS ==================================
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -330,3 +383,12 @@ LOGGING = {
         },
     },
 }
+
+
+# ======================= HuggingFace Embedding Configuration =================================
+EMBEDDING_DEVICE = "auto"  # Automatically detects GPU/CPU
+
+# Optional: Model cache directory
+HF_HOME = "/path/to/model_cache"  # For offline usage
+EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"  # Best general-purpose model
+HUGGINGFACEHUB_API_TOKEN = os.environ.get('HUGGINGFACEHUB_API_TOKEN') #  for HuggingFaceEndpointEmbeddings

@@ -47,6 +47,13 @@ class AIConfigurationAdmin(admin.ModelAdmin):
                 'learn_from_history',
             )
         }),
+        ('Token Counters', {
+            'fields': (
+                'total_input_tokens',
+                'total_output_tokens',
+                'total_tokens',
+            )
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at')
         }),

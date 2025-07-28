@@ -1,0 +1,40 @@
+{
+  "content": "",
+  "additional_kwargs": {
+    "function_call": {
+      "name": "multiply_tool",
+      "arguments": "{\"a\": 9.0, \"b\": 2.0}"
+    }
+  },
+  "response_metadata": {
+    "prompt_feedback": {
+      "block_reason": 0,
+      "safety_ratings": []
+    },
+    "finish_reason": "STOP",
+    "model_name": "gemini-2.0-flash",
+    "safety_ratings": []
+  },
+
+  "id": "run--ebd05f96-cfe2-4acb-90ab-1a8c0f9b1ec2-0",
+  "tool_calls": [
+    {
+      "name": "multiply_tool",
+      "args": {
+        "a": 9.0,
+        "b": 2.0
+      },
+      "id": "b6d44468-a769-42ee-a1d8-7f5eac062294",
+      "type": "tool_call"
+    }
+  ],
+  "usage_metadata": {
+    "input_tokens": 431,
+    "output_tokens": 7,
+    "total_tokens": 438,
+    "input_token_details": {
+      "cache_read": 0
+    }
+  }
+}
+

@@ -8,6 +8,7 @@ from account.renderers import UserRenderer
 from chatbot.services.llm.agents import ChatAgent
 from chatbot.utils import ChatBotUtil
 from account.permissions import IsSuperAdminOrReadOnlyBusinessman
+from messaging.models.conversation import Conversation
 
 
 # Initialize the OpenAI client
@@ -114,3 +115,68 @@ class ChatMessageAPIView(APIView):
             return Response({'error': str(e), 'status': 'error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
+from chatbot.services.llm.advance_agent.chat_agent import ChatAgent as AdvanceChatAgent
+from account.permissions import IsAuthenticatedAndVerified
+from utils.renderers import CustomRenderer
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from messaging.models import Conversation
+from asgiref.sync import async_to_sync
+
+
+class AdvanceChatAPIView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        try:
+            message = request.data.get('message')
+            if not message:
+                return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # ✅ SAFE sync code — all works without error
+            conversation = Conversation.objects.filter(user=request.user).first()
+
+            if not conversation:
+                return Response({'error': 'No conversation found'}, status=status.HTTP_404_NOT_FOUND)
+
+            agent = AdvanceChatAgent(request.user, conversation)
+
+            ai_response = async_to_sync(agent.get_response)(message)
+
+            return Response({'response': ai_response, 'status': 'success'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e), 'status': 'error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+from chatbot.langgraph.chat_agent import ChatAgent as LangGraphChatAgent
+class LangGraphChatAPIView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        try:
+            message = request.data.get('message')
+            if not message:
+                return Response({'error': 'Message is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            conversation = Conversation.objects.filter(user=request.user).first()
+
+            if not conversation:
+                return Response({'error': 'No conversation found'}, status=status.HTTP_404_NOT_FOUND)
+
+            # Initialize the LangGraph agent
+            agent = LangGraphChatAgent(request.user, conversation=conversation)
+
+
+
+            # Get AI response
+            ai_response = async_to_sync(agent.get_response)(message)
+
+            return Response({'response': ai_response, 'status': 'success'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': str(e), 'status': 'error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

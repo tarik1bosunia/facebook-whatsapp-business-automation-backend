@@ -5,12 +5,12 @@ from utils.pagination import CustomPageNumberPagination
 from ..models import ProductCategory, Product
 from ..serializers import ProductCategorySerializer, ProductSerializer
 from account.renderers import UserRenderer
-from account.permissions import IsBusinessman
+from account.permissions import IsBusinessman, IsAuthenticatedAndVerified
 from django_filters.rest_framework import DjangoFilterBackend
 
 class ProductCategoryViewSet(ModelViewSet):
     serializer_class = ProductCategorySerializer
-    permission_classes = [IsBusinessman]
+    permission_classes = [IsAuthenticatedAndVerified]
     renderer_classes = [UserRenderer]
     pagination_class = None
 
@@ -28,7 +28,7 @@ class ProductCategoryViewSet(ModelViewSet):
 
 class ProductViewSet(ModelViewSet):
     serializer_class = ProductSerializer
-    permission_classes = [IsBusinessman]
+    permission_classes = [IsAuthenticatedAndVerified]
     renderer_classes = [UserRenderer]
     pagination_class = CustomPageNumberPagination
 

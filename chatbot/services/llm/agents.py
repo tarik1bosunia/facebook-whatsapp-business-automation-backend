@@ -68,7 +68,6 @@ class ChatAgent:
         ]
     
 
-
     def _create_agent(self):
         return initialize_agent(
             tools=self.tools,
@@ -80,8 +79,6 @@ class ChatAgent:
             handle_parsing_errors=True,
         )
     
-
-
     def _get_products_info(self, query):
         from django.template.loader import render_to_string
         from business.models import Product

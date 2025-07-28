@@ -73,3 +73,26 @@ class WhatsAppIntegrationAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
 
 
+from .models import Promotion
+
+@admin.register(Promotion)
+class PromotionAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "user",
+        "discount_percent",
+        "start_date",
+        "end_date",
+        "is_active",
+        "is_current",
+    )
+    list_filter = ("is_active", "start_date", "end_date")
+    search_fields = ("title", "description", "user__email", "user__username")
+    date_hierarchy = "start_date"
+    ordering = ("-start_date",)
+
+    def is_current(self, obj):
+        return obj.is_current()
+    is_current.boolean = True  # ✅ Adds a green checkmark in admin
+    is_current.short_description = "Currently Active"
+
