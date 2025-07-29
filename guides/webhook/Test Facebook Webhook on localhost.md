@@ -17,9 +17,12 @@ ALLOWED_HOSTS = [
 ## 2. Run Django server locally
 ```sh
 python manage.py runserver 8000
+
+
 ```
-## 3. Start ngrok on the same port
+## 3. Start ngrok on the same domain port
 ```sh
+ngrok http --url=wholly-notable-raccoon.ngrok-free.app http://127.0.0.1:8000
 ngrok http http://127.0.0.1:8000
 ngrok http --domain=myapp.ngrok-free.app 8000
 ```
@@ -27,14 +30,14 @@ ngrok http --domain=myapp.ngrok-free.app 8000
 ```sh
 ngrok http --domain=fitting-ladybug-mistakenly.ngrok-free.app 8000
 ```
-## https://fitting-ladybug-mistakenly.ngrok-free.app -> http://localhost:8000
+##  https://wholly-notable-raccoon.ngrok-free.app -> http://localhost:8000
 
 ## webhook setup url on facebook messenger
--  https://fitting-ladybug-mistakenly.ngrok-free.app/api/messaging/webhook/messenger/
+-   https://wholly-notable-raccoon.ngrok-free.app/api/messaging/webhook/messenger/
 -  https://612498680b28.ngrok-free.app/api/messaging/webhook/messenger/
 - https://developers.facebook.com/apps/1405936334088402/webhooks/?business_id=1786552525544080
 ## webhook setup url on whatsapp
-- https://fitting-ladybug-mistakenly.ngrok-free.app/api/messaging/webhook/whatsapp/
+- https://wholly-notable-raccoon.ngrok-free.app/api/messaging/webhook/whatsapp/
 - https://728b-103-99-177-138.ngrok-free.app/api/messaging/webhook/whatsapp/
 - https://business.facebook.com/latest/settings/system_users?business_id=1786552525544080&selected_user_id=61576759232765
 - https://developers.facebook.com/apps/686555444118209/whatsapp-business/wa-settings/?business_id=1786552525544080

@@ -6,6 +6,8 @@ class BusinessHoursInline(admin.TabularInline):
     model = BusinessHours
     extra = 1
 
+   
+
 @admin.register(BusinessProfile)
 class BusinessProfileAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'name', 'email', 'phone', 'website']
@@ -19,7 +21,11 @@ class BusinessHoursAdmin(admin.ModelAdmin):
     search_fields = ['business__name']
 
 
-from .models import ProductCategory, Product
+from .models import ProductCategory, Product, ProductFAQ
+
+class ProductFAQInline(admin.TabularInline):
+    model = ProductFAQ
+    extra = 1 
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
@@ -32,9 +38,13 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'category', 'user', 'price', 'stock', 'created_at')
     search_fields = ('name',)
     list_filter = ('category', 'user')
+    inlines = [ProductFAQInline]
 
 
-
+@admin.register(ProductFAQ)
+class ProductFAQAdmin(admin.ModelAdmin):
+    list_display = ('product', 'question')
+    search_fields = ('question', 'product__name')
 
 from .models import FacebookIntegration, WhatsAppIntegration
 

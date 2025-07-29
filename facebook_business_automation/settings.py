@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'localhost',
-    'fitting-ladybug-mistakenly.ngrok-free.app', # temporary for testing webhook
+    'wholly-notable-raccoon.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
 ]
 

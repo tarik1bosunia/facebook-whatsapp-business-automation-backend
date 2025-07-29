@@ -77,10 +77,13 @@ class BaseMessageTypeHandler(ABC):
             message=self.reply_message_for_socialuser, 
         )
 
-        whatsapp_service.WhatsAppService().send_text_message(
+        # TODO: here need to truck the sended or not to the customer
+        response = whatsapp_service.WhatsAppService().send_text_message(
             phone_number=self.sender,
             message=self.reply_message_for_socialuser
         )
+
+
 
 
     def handle(self, message: Dict, sender: str, message_type: str, name: Optional[str] = None, user= None):

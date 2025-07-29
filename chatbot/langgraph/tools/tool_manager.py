@@ -4,6 +4,7 @@ import logging
 from pydantic import BaseModel, Field
 from .product_search_tool import ProductSearchTool
 from .faq_search_tool import FAQSearchTool
+from .product_faq_search import ProductFAQSearchTool
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,9 @@ class ToolManager:
         """Get all available tools with initialization checks"""
         try:
             return [
-                AddTool(),
-                SubtractTool(),
-                MultiplyTool(),
-                DivideTool(),
-                ProductSearchTool(),
                 FAQSearchTool(),
+                ProductFAQSearchTool(),
+                ProductSearchTool(),
             ]
         except Exception as e:
             logger.error(f"Failed to initialize tools: {str(e)}")

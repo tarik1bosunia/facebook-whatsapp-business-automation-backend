@@ -91,16 +91,23 @@ class ChatAgent:
 
         logger.info(f"Loading {len(messages)} messages from DB into Redis")
 
+        message_objects = []
         for msg in messages:
             try:
                 content = msg.message[:4000] # Truncate long messages
                 if msg.sender == SENDER_CHOICES.CUSTOMER:
-                    await self.history.aadd_user_message(content)
+                    message_objects.append(HumanMessage(content=content))
                 else:
-                    await self.history.aadd_ai_message(content)
+                     message_objects.append(AIMessage(content=content))
             except Exception as e:
                 logger.warning(f"Failed to load message {msg.id}: {str(e)}")
 
+        if message_objects:
+            try:
+                await self.history.aadd_messages(message_objects)
+            except Exception as e:
+                logger.error(f"Failed to load messages into Redis: {str(e)}")
+                raise
         logger.info("Finished loading messages into Redis memory")
 
     def _validate_initialization(self):

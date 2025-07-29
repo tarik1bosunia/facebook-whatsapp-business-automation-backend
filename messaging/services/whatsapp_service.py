@@ -1,11 +1,13 @@
 import requests
 import logging
 from django.conf import settings
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, HTTPError
 import re
 import httpx
 
 logger = logging.getLogger(__name__)
+
+# TODO: need to replace with user WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID
 
 class WhatsAppService:
     def __init__(self):
@@ -27,6 +29,32 @@ class WhatsAppService:
             )
             response.raise_for_status()
             return response.json()
+        
+        except HTTPError as e:  
+            logger.error(f"WhatsApp API HTTPError: {str(e)}")
+            if e.response is not None:
+                try:
+                    error_data = e.response.json().get("error", {})
+                    logger.error(f"API Response: {error_data}")
+
+                    if error_data.get("code") == 190:  # ✅ ADDED: Token expired handling
+                        logger.error("Facebook token has expired.")
+                        return {
+                            "success": False,
+                            "error": "TokenExpired",
+                            "message": "Facebook access token has expired. Please reconnect your account."
+                        }
+
+                    return {
+                        "success": False,
+                        "error": "FacebookAPIError",
+                        "message": error_data.get("message", "Unknown error"),
+                        "details": error_data
+                    }
+                except ValueError:
+                    logger.error("Non-JSON error response from Facebook API.")
+            raise  # Still raise if not handled
+        
         except RequestException as e:
             logger.error(f"WhatsApp API Error: {str(e)}")
             if hasattr(e, 'response'):

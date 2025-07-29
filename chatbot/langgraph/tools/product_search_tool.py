@@ -1,9 +1,9 @@
 from langchain_core.tools import BaseTool
-from typing import List, Dict, Any, Type, Optional
+from typing import List, Type, Optional
 import logging
 from pydantic import BaseModel, Field
 from django.db.models import Q
-from business.models import Product, ProductCategory
+from business.models import Product
 from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
@@ -15,10 +15,10 @@ class ProductSearchTool(BaseTool):
     name: str = "product_search_tool"
     description: str = (
         "Search products in the database by name, price range, or category. "
-        "Examples: 'iphone', 'price < 1300', 'price > 1000', 'price = 1200', 'category:electronics'"
+        "For product technical questions, use the product_faq_search_tool instead. "
+        "Examples: 'iphone', 'price < 1300', 'category:electronics'"
     )
     
-    # Define input schema
     class InputSchema(BaseModel):
         query: str = Field(..., description="Search query (name, price expression, or category)")
         user_id: Optional[int] = Field(None, description="Optional user ID to filter by business owner")
@@ -27,7 +27,7 @@ class ProductSearchTool(BaseTool):
     args_schema: Type[BaseModel] = InputSchema
     
     def _run(self, query: str, user_id: Optional[int] = None, limit: int = 10) -> str:
-        """Search products in the database by name, price, or category"""
+        """Search products in the database"""
         try:
             query = query.lower().strip()
             results = self._search_products(query, user_id, limit)
@@ -38,21 +38,16 @@ class ProductSearchTool(BaseTool):
 
     def _search_products(self, query: str, user_id: Optional[int], limit: int) -> List[Product]:
         """Handle the actual product search logic"""
-        # Start with base queryset
         queryset = Product.objects.select_related('category').all()
         
-        # Filter by user if specified
         if user_id:
             queryset = queryset.filter(user_id=user_id)
         
-        # Check for price queries
         if query.startswith('price'):
             return self._search_by_price(queryset, query, limit)
-        # Check for category queries
         elif query.startswith('category:'):
             category_name = query.replace('category:', '').strip()
             return self._search_by_category(queryset, category_name, limit)
-        # Default to name search
         else:
             return self._search_by_name(queryset, query, limit)
 
@@ -64,7 +59,6 @@ class ProductSearchTool(BaseTool):
         
         try:
             price_value = float(parts[2])
-            price_field = 'price'
             
             if parts[1] == "<":
                 return list(queryset.filter(price__lt=price_value).order_by('price')[:limit])
@@ -83,8 +77,7 @@ class ProductSearchTool(BaseTool):
         """Search products by name or description"""
         return list(queryset.filter(
             Q(name__icontains=query) | Q(description__icontains=query)
-        ).order_by('-stock', 'price')[:limit]
-         ) # Prioritize items with higher stock
+        ).order_by('-stock', 'price')[:limit])
 
     def _search_by_category(self, queryset, category_name: str, limit: int) -> List[Product]:
         """Search products by category name"""
@@ -93,7 +86,7 @@ class ProductSearchTool(BaseTool):
         ).order_by('-stock', 'price')[:limit])
 
     def _format_results(self, results: List[Product], query: str) -> str:
-        """Format the search results with rich product information"""
+        """Format the search results"""
         if not results:
             return f"No products found matching '{query}'"
         
@@ -107,6 +100,7 @@ class ProductSearchTool(BaseTool):
                 f"\n- {product.name} (${product.price:.2f}) "
                 f"\n  Category: {category} | {stock_status} | Available: {product.stock}"
                 f"\n  Description: {product.description[:100]}{'...' if len(product.description) > 100 else ''}"
+                f"\n  ID: {product.id}"
             )
         
         return "\n".join(formatted)
