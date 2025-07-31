@@ -1,8 +1,8 @@
 from typing import Dict
 
-from messaging.handlers.base_handler import BaseMessageTypeHandler
+from messaging.handlers.base_handler import BaseMessageTypeHandlerWhatsApp
 from messaging.models import SENDER_CHOICES
-class ContactsMessageHandler(BaseMessageTypeHandler):
+class ContactsMessageHandler(BaseMessageTypeHandlerWhatsApp):
     def extract_fields(self, message: Dict)-> None:
         contacts_data = message.get("contacts", [])
 
@@ -22,7 +22,7 @@ class ContactsMessageHandler(BaseMessageTypeHandler):
         ]
 
         self.message = f"{len(self.contacts)} contact(s) received"
-        self.reply_message_for_user = "Thanks for sharing the contacts"
+        self.reply_message_for_socialuser = "Thanks for sharing the contacts"
         self.replier = SENDER_CHOICES.BUSINESS
 
 

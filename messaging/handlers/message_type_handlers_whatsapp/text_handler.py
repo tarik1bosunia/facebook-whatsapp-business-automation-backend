@@ -1,8 +1,8 @@
 from typing import Dict
-from messaging.handlers.base_handler import BaseMessageTypeHandler
+from messaging.handlers.base_handler import BaseMessageTypeHandlerWhatsApp
 
 
-class TextMessageHandler(BaseMessageTypeHandler):
+class TextMessageHandler(BaseMessageTypeHandlerWhatsApp):
     def extract_fields(self, message: Dict)-> None:
         self.message = message['text']['body']
 

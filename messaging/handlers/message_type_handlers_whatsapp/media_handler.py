@@ -1,9 +1,9 @@
 from typing import Dict
 
-from messaging.handlers.base_handler import BaseMessageTypeHandler
+from messaging.handlers.base_handler import BaseMessageTypeHandlerWhatsApp
 from messaging.models import SENDER_CHOICES
 
-class MediaMessageHandler(BaseMessageTypeHandler):
+class MediaMessageHandler(BaseMessageTypeHandlerWhatsApp):
     def extract_fields(self, message: Dict)-> None:
         self.media_id = message[self.media_type]['id']
         self.message = message[self.media_type].get('caption', 'No caption')
