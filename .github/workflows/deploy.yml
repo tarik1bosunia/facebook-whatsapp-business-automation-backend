@@ -55,15 +55,10 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
-            echo "📁 Creating directories for static and media..."
-            sudo mkdir -p /var/www/fbaserver/static /var/www/fbaserver/media
-
-            echo "📤 Copying static files from container..."
+            echo "📁 Copying static files..."
             docker cp fbaserver-container:/app/staticfiles /var/www/fbaserver/static
 
-            echo "📤 Copying media files from container..."
+            echo "📁 Copying media files..."
             docker cp fbaserver-container:/app/media /var/www/fbaserver/media
-
-            echo "✅ Setting permissions for Nginx access..."
-            sudo chown -R www-data:www-data /var/www/fbaserver
           EOF
+
