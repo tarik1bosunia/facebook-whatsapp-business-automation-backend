@@ -51,14 +51,4 @@ jobs:
             docker image prune -f
           EOF
 
-      - name: 📂 Copy static and media files from container to Nginx path
-        run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            set -e
-            echo "📁 Copying static files..."
-            docker cp fbaserver-container:/app/staticfiles /var/www/fbaserver/static
-
-            echo "📁 Copying media files..."
-            docker cp fbaserver-container:/app/media /var/www/fbaserver/media
-          EOF
 
