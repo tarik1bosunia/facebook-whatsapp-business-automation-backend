@@ -19,8 +19,8 @@ services:
       context: .
     volumes:
       # - .:/app
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
+      # - ./staticfiles:/app/staticfiles
+      # - ./media:/app/media
       - ./.env:/app/.env
       # - ./model_cache:/app/model_cache 
 
