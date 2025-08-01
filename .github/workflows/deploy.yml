@@ -20,7 +20,7 @@ jobs:
     - name: Run deployment script from repo
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
-          cd ~/yourproject &&
+          cd ~/tata &&
           git pull origin main &&
           chmod +x ./deploy.sh &&
           ./deploy.sh
