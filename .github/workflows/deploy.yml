@@ -10,13 +10,17 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup SSH agent
       uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
-    - name: Run deployment script
+    - name: Run deployment script from repo
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} 'bash ~/deploy.sh'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
+          cd ~/yourproject &&
+          git pull origin main &&
+          chmod +x ./deploy.sh &&
+          ./deploy.sh
