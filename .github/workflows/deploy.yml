@@ -1,26 +1,36 @@
-name: Deploy to VPS
+name: Deploy Django App to VPS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main  # Change to your deployment branch if needed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup SSH agent
-      uses: webfactory/ssh-agent@v0.9.0
-      with:
-        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Run deployment script from repo
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} '
-          cd ~/tata &&
-          git pull origin main &&
-          chmod +x ./deploy.sh &&
-          ./deploy.sh
+      - name: Rsync project files to VPS
+        run: |
+          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" ./ \
+          ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/fbaserver/
+
+      - name: Deploy on VPS with Docker Compose
+        run: |
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /home/deploy/fbaserver
+            docker compose pull
+            docker compose down --remove-orphans
+            docker compose up --build -d
+            docker image prune -f
+          EOF
