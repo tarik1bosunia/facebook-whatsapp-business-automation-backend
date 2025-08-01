@@ -9,6 +9,19 @@
 # https://github.com/docker/awesome-compose
 name: fbaserver
 services:
+  init-perms:  # ✅ NEW service to create and fix permissions
+    image: alpine:3.20
+    container_name: fba-init-container
+    command: >
+      sh -c "
+      mkdir -p /staticfiles /media &&
+      chown -R 10001:10001 /staticfiles /media &&
+      chmod -R 755 /staticfiles /media
+      "
+    volumes:
+      - /var/www/fbaserver/static:/staticfiles
+      - /var/www/fbaserver/media:/media
+    restart: "no"
   server:
 #    restart: unless-stopped
 #    image: ghcr.io/<USERNAME>/<REPO_NAME>/server:latest
@@ -18,13 +31,10 @@ services:
     build:
       context: .
     volumes:
-      # - .:/app
-      - ./staticfiles:/app/staticfiles
-      - ./media:/app/media
-      - /var/www/fbaserver/static:/app/staticfiles  # For Nginx static path
-      - /var/www/fbaserver/media:/app/media        # For Nginx media path
+      # ✅ Use absolute path for static & media volumes for Nginx + Django
+      - /var/www/fbaserver/static:/app/staticfiles      
+      - /var/www/fbaserver/media:/app/media         
       - ./.env:/app/.env
-      # - ./model_cache:/app/model_cache 
 
     env_file:
       - .env
@@ -38,6 +48,8 @@ services:
 # to set the database password. You must create `db/password.txt` and add
 # a password of your choosing to it before running `docker compose up`.
     depends_on:
+      init-perms:  # ✅ Ensure volumes are ready before app runs
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       redis:  #  Wait for Redis to be ready before starting server
