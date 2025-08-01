@@ -19,8 +19,10 @@ services:
       context: .
     volumes:
       # - .:/app
-      # - ./staticfiles:/app/staticfiles
-      # - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+      - ./media:/app/media
+      - /var/www/fbaserver/static:/app/staticfiles  # For Nginx static path
+      - /var/www/fbaserver/media:/app/media        # For Nginx media path
       - ./.env:/app/.env
       # - ./model_cache:/app/model_cache 
 
