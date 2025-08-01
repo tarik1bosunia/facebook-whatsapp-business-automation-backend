@@ -27,23 +27,27 @@ jobs:
             -e "ssh -i ~/.ssh/id_ed25519" ./ \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/fbaserver/
 
-
       - name: 🚀 Deploy with Docker Compose on VPS
         run: |
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
             cd /home/deploy/fbaserver
 
-            echo "📥 Pulling latest images..."
-            docker compose pull
+            echo "✅ Copying .env from persistent path (if exists)..."
+            if [ -f /home/deploy/.env.fbaserver ]; then
+              cp /home/deploy/.env.fbaserver .env
+            fi
 
-            echo "🧹 Cleaning up old containers..."
+            echo "📥 Pulling latest images..."
+            docker compose pull || true  # Optional, in case no remote image exists
+
+            echo "🧹 Stopping and removing containers..."
             docker compose down --remove-orphans
 
             echo "🔧 Building and starting containers..."
             docker compose up --build -d
 
-            echo "🧽 Pruning unused Docker images..."
+            echo "🧽 Cleaning up unused Docker images..."
             docker image prune -f
           EOF
 
@@ -59,4 +63,7 @@ jobs:
 
             echo "📤 Copying media files from container..."
             docker cp fbaserver-container:/app/media /var/www/fbaserver/media
+
+            echo "✅ Setting permissions for Nginx access..."
+            sudo chown -R www-data:www-data /var/www/fbaserver
           EOF
