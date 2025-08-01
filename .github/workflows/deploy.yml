@@ -20,10 +20,13 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 📦 Rsync project files to VPS
+      - name: 📦 Rsync project files to VPS (excluding .env)
         run: |
-          rsync -avz --delete -e "ssh -i ~/.ssh/id_ed25519" ./ \
-          ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/fbaserver/
+          rsync -avz --delete \
+            --exclude=".env" \
+            -e "ssh -i ~/.ssh/id_ed25519" ./ \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/fbaserver/
+
 
       - name: 🚀 Deploy with Docker Compose on VPS
         run: |
