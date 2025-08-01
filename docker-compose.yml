@@ -18,13 +18,14 @@ services:
     build:
       context: .
     volumes:
-      - .:/app
+      # - .:/app
       - ./staticfiles:/app/staticfiles
       - ./media:/app/media
+      - ./.env:/app/.env
       # - ./model_cache:/app/model_cache 
 
     env_file:
-      - ./.env
+      - .env
     ports:
       - 8000:8000
 
@@ -41,12 +42,13 @@ services:
         condition: service_started  
     environment:
       # Ensure these variables match the DATABASES setting in your Django settings.py file
-      - DB_NAME=fbadb
-      - DB_USER=postgres
-      - DB_PASSWORD_FILE=/run/secrets/db-password
-      - DB_HOST=db  # This should be the service name of the PostgreSQL container
-      - DB_PORT=5432
-      - REDIS_URL=redis://redis:6379/0  # Redis connection URL
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}  # This should be the service name of the PostgreSQL container
+      - DB_PORT=${DB_PORT}
+      - REDIS_URL=${REDIS_URL}
+      #- REDIS_URL=redis://redis:6379/0  # Redis connection URL
       # - DJANGO_SETTINGS_MODULE=your_project.settings.production
 
     healthcheck:
@@ -58,16 +60,21 @@ services:
     image: pgvector/pgvector:pg17 # https://hub.docker.com/r/pgvector/pgvector
     container_name: fba-postgres-container
     restart: always
-    user: postgres
-    secrets:
-      - db-password
+    hostname: ${DB_HOST}
+    ports:
+      - "5432:${DB_PORT}"
+    user: ${DB_USER}
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql  # Load pgvector extension
+    
+    env_file:
+      - .env
+
     environment:
-      - POSTGRES_DB=fbadb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     expose:
       - 5432
     healthcheck:
@@ -82,12 +89,12 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    env_file:
+      - .env  
     volumes:
       - redis-data:/data
     restart: unless-stopped    
 volumes:
   db-data:
   redis-data:
-secrets:
-  db-password:
-    file: db/password.txt
+

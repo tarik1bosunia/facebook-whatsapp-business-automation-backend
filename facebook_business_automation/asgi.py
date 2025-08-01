@@ -4,7 +4,9 @@ from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dc1.settings')
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dc1.settings')
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", os.getenv("DJANGO_SETTINGS_MODULE", "facebook_business_automation.settings.dev"))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'facebook_business_automation.settings')
 
 django_asgi_app = get_asgi_application()
 

@@ -16,7 +16,7 @@ class SocialMediaUserViewSet(viewsets.ReadOnlyModelViewSet):
         return SocialMediaUser.objects.all()
         # return SocialMediaUser.objects.filter(customer__user=self.request.user)
 
-    @action(detail=False, url_path='by-platform/(?P<platform>\w+)', methods=['get'])
+    @action(detail=False, url_path=r'by-platform/(?P<platform>\w+)', methods=['get'])
     def by_platform(self, request, platform=None):
         platform = platform.lower()
         # valid_platforms = [choice[0] for choice in SocialMediaUser.Platform.choices]

@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#sbye5p%p=%ac78!m4bgw$v%qa7f)0e_p0^&)sxfq=d-8z5mjp'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -65,17 +65,20 @@ INSTALLED_APPS = [
     'utils',
     'account',
     'messaging',
-    'facebook',
     'chatbot',
     'customer',
     'knowledge_base',
     'business',
     'analytics',
     'llm_integration',
+    
+    # deploy
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
@@ -145,10 +148,9 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fbadb',  # Matches POSTGRES_DB
+        'NAME': os.environ.get("DB_NAME"),  # Matches POSTGRES_DB
         'USER': 'postgres',  # Matches POSTGRES_USER
-        # 'PASSWORD': os.getenv('DB_PASSWORD', 'my_secret_password'),  # Load from env variable or leave as an empty string
-        'PASSWORD': get_secret('/run/secrets/db-password') or os.environ.get('DB_PASSWORD',),
+        'PASSWORD': os.environ.get('DB_PASSWORD',),
         'HOST': 'db',  # Docker service name
         'PORT': '5432',  # PostgreSQL default port
         'URL': 'postgresql://your_db_user:your_db_password@localhost:5432/your_db_name'
@@ -392,3 +394,11 @@ EMBEDDING_DEVICE = "auto"  # Automatically detects GPU/CPU
 HF_HOME = "/path/to/model_cache"  # For offline usage
 EMBEDDING_MODEL = "sentence-transformers/all-mpnet-base-v2"  # Best general-purpose model
 HUGGINGFACEHUB_API_TOKEN = os.environ.get('HUGGINGFACEHUB_API_TOKEN') #  for HuggingFaceEndpointEmbeddings
+
+
+# =============== Whitenoise ========================================
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    }
+}

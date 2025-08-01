@@ -26,9 +26,11 @@ if [ "$DJANGO_ENV" = "development" ]; then
     exec python manage.py runserver 0.0.0.0:8000
 else
     echo "Starting Gunicorn..."
-    exec gunicorn your_project.asgi:application \
+    exec gunicorn facebook_business_automation.asgi:application \
         -k uvicorn.workers.UvicornWorker \
         --bind 0.0.0.0:8000 \
         --workers 3 \
         --log-level=info
 fi
+# Workers where I write 3 , it will be =  number of CPU cores × 2 + 1:
+# --workers $(($(nproc) * 2 + 1))

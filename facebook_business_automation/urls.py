@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from .utils.views import HealthCheckView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('api/knowledge-base/', include('knowledge_base.urls')),
     path('api/analytics/', include('analytics.urls')),
     # path('api/integrations/', include('apps.integrations.urls')),
+    path('health/', HealthCheckView.as_view()),
 ]
 
 # Serve media files during development

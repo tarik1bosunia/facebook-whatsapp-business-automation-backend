@@ -44,12 +44,15 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-# Install PostgreSQL client libraries and build dependencies.
-RUN apt-get update && apt-get install -y \
-libpq-dev \
-gcc \
-git \ 
-&& rm -rf /var/lib/apt/lists/*
+# ---- Install system dependencies ----
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    libpq-dev \
+    gcc \
+    git \
+    curl \
+    dos2unix \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 
 # COPY requirements.txt .
@@ -65,23 +68,27 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python -m pip install -r requirements.txt
 
 
-RUN pip uninstall python-dotenv -y
-RUN pip install django-dotenv    
+# ---- Fix known issue with python-dotenv vs django-dotenv ----
+RUN pip uninstall python-dotenv -y && pip install django-dotenv
 
 
 # Switch to the non-privileged user to run the application.
 
-# Copy the source code into the container.
+# ---- Copy project files ----
 COPY . .
+
+# Ensure appuser owns the codebase
+RUN chown -R appuser:appuser /app
+
 
 # Remove all migration files except __init__.py during build
 RUN find . -path "*/migrations/*.py" ! -name "__init__.py" -delete && \
     find . -path "*/migrations/*.pyc" -delete
 
 
-# Copy entrypoint and give execute permissions as root
+# ---- Copy and fix entrypoint script ----
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh    
+RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Set ownership and switch to non-root user
 # RUN chown -R appuser:appuser /app
