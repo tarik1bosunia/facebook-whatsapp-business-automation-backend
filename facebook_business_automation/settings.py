@@ -349,7 +349,7 @@ SIMPLE_JWT = {
 PASSWORD_RESET_TIMEOUT = 900        # 900 sec = 15 min
 
 CORS_ALLOWED_ORIGINS = [
-    "https://ratemyprofessor.ru.ac.bd",
+    "https://smartchatbot.click",
     "https://rateteach.ru.ac.bd",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
