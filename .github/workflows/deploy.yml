@@ -1,54 +1,56 @@
-name: Deploy Django App to VPS
+name: Deploy fba-frontend to VPS
 
 on:
   push:
-    branches:
-      - main  # ✅ Update if you deploy from a different branch
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ✅ Checkout Code
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🔐 Set up SSH
+      # 2️⃣ Set up SSH
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      # 3️⃣ Create clean archive without modifying files while tarring
+      - name: Archive project
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+          mkdir /tmp/fba-frontend
+          rsync -av \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.github' \
+            --exclude='.env' \
+            ./ /tmp/fba-frontend/
+          cd /tmp/fba-frontend
+          tar -czf fba-frontend.tar.gz .
+          mv fba-frontend.tar.gz $GITHUB_WORKSPACE
 
-      - name: 📦 Rsync project files to VPS (excluding .env)
+      # 4️⃣ Upload archive to VPS
+      - name: Upload to VPS
         run: |
-          rsync -avz --delete \
-            --exclude=".env" \
-            -e "ssh -i ~/.ssh/id_ed25519" ./ \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/deploy/fbaserver/
+          scp -o StrictHostKeyChecking=no fba-frontend.tar.gz ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/${{ secrets.VPS_USER }}/
 
-      - name: 🚀 Deploy with Docker Compose on VPS
+      # 5️⃣ Deploy & build inside Docker on VPS
+      - name: Deploy on VPS
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            set -e
-            cd /home/deploy/fbaserver
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            cd /home/${{ secrets.VPS_USER }}
+            rm -rf fba-frontend && mkdir fba-frontend
+            tar -xzf fba-frontend.tar.gz -C fba-frontend
+            cd fba-frontend
 
-            echo "✅ Copying .env from persistent path (if exists)..."
-            if [ -f /home/deploy/.env.fbaserver ]; then
-              cp /home/deploy/.env.fbaserver .env
-            fi
+            # Create .env file from GitHub Secrets
+            echo "${{ secrets.ENV_PRODUCTION }}" > .env
 
-            echo "📥 Pulling latest images..."
-            docker compose pull || true  # Optional, in case no remote image exists
-
-            echo "🧹 Stopping and removing containers..."
-            docker compose down --remove-orphans
-
-            echo "🔧 Building and starting containers..."
+            # Stop old containers and rebuild
+            docker compose down
             docker compose up --build -d
-
-            echo "🧽 Cleaning up unused Docker images..."
-            docker image prune -f
           EOF
-
-
