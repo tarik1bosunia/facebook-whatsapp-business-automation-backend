@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
     'wholly-notable-raccoon.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
     'api.smartchatbot.click',
+    'smartchatbot.click',
 ]
 
 # this is for multiple frontend single backend activation link sent in email , activation link need to fronetned domain
@@ -41,7 +42,8 @@ ALLOWED_FRONTEND_DOMAINS = [
     'rateteach.ru.ac.bd',
     'localhost:3000',  # for development
     # add other allowed frontend domains
-    'localhost:4000'
+    'localhost:4000',
+    "smartchatbot.click",
 ]
 
 
