@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from .product_search_tool import ProductSearchTool
 from .faq_search_tool import FAQSearchTool
 from .product_faq_search import ProductFAQSearchTool
+from .order_confirmation_tool import OrderConfirmationTool
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class ToolManager:
                 FAQSearchTool(),
                 ProductFAQSearchTool(),
                 ProductSearchTool(),
+                OrderConfirmationTool(),
             ]
         except Exception as e:
             logger.error(f"Failed to initialize tools: {str(e)}")

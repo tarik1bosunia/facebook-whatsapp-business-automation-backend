@@ -1,5 +1,5 @@
 from langchain_core.prompts import ChatPromptTemplate
-from business.models import Promotion, BusinessProfile
+from business.models import Promotion, BusinessProfile, Category  # Assuming a Category model exists
 from django.utils import timezone
 from django.db import models
 
@@ -12,7 +12,7 @@ You are {BrandPersona}, assisting customers on behalf of {ShopName}, owned by {O
 - Detect and reply in the customer's language.
 - Keep responses culturally appropriate.
 
-2. **Product Support**
+2. **Product & Service Support**
 - Use product search to provide 2-3 relevant matches.
 - Mention benefits and promotions when applicable.
 - Suggest complementary products tactfully.
@@ -22,21 +22,24 @@ You are {BrandPersona}, assisting customers on behalf of {ShopName}, owned by {O
   - Shipping, returns, refunds, product info, account, payments.
 - Escalate complex cases to support: {SupportEmail} / {SupportPhone}.
 
-4. **Tone & Style**
+4. **Sales & Order Management**
+- When a customer is ready to purchase, use the `order_confirmation_tool` to finalize the sale.
+- To use the tool, you must gather all required information: order number, customer details (name/ID), total cost, and number of items.
+- If a customer's details (name, email, or phone) are not known, first ask for them.
+- Do not use this tool for general inquiries; it is for creating confirmed orders only.
+- Mention current promotions automatically.
+
+5. **Tone & Style**
 - Maintain {ResponseTone} tone.
 - Be friendly, concise (1-3 sentences), and professional.
 - Use emojis sparingly for warmth (e.g., 😊).
-
-5. **Sales Approach**
-- Highlight features/benefits positively without exaggeration.
-- Offer alternatives when out of stock.
-- Mention current promotions automatically.
 
 ### Shop Info
 - Name: {ShopName}
 - Categories: {KeyProductCategories}
 - Promotions: {CurrentPromotions}
 - Support: {SupportEmail} | {SupportPhone}
+- Current Date and Time: {CurrentDateTime}
 
 Remember: Prioritize helpfulness, clarity, and accuracy. Say "I don’t know" if unsure.
 """
@@ -46,14 +49,11 @@ system_prompt_template = ChatPromptTemplate.from_template(SYSTEM_PROMPT_TEMPLATE
 
 def get_formatted_system_prompt(user):
     """
-    Generates the system prompt using BusinessProfile + AI config (if available).
+    Generates the system prompt using user-related data and AI config.
     """
-
-    # Get related business profile
-    business = getattr(user, "business", None)
-
-    # Get AI config (if exists)
+    # Assuming user has an `ai_config` and `business` related objects
     config = getattr(user, "ai_config", None)
+    business = getattr(user, "business", None)
 
     # Active promotions
     active_promotions = Promotion.objects.filter(
@@ -69,23 +69,24 @@ def get_formatted_system_prompt(user):
          for promo in active_promotions]
     ) or "No promotions currently"
 
-    # Fallback values
-    fallback = {
-        "ShopName": business.name if business else "Our Shop",
-        "OwnerName": user.get_full_name() if hasattr(user, "get_full_name") else "Business Owner",
-        "BrandPersona": "a helpful and knowledgeable assistant",
-        "ResponseTone": "friendly",
-        "SupportEmail": business.email if business else "support@example.com",
-        "SupportPhone": business.phone if business else "+000000000",
-        "KeyProductCategories": "General Products",
-        "CurrentPromotions": promo_text
+    # Fetch key product categories associated with the user
+    try:
+        categories = Category.objects.filter(user=user)
+        categories_text = ", ".join([cat.name for cat in categories]) or "General Products"
+    except (Category.DoesNotExist, AttributeError):
+        categories_text = "General Products"
+
+    # Fallback values for the prompt, derived from user and related models
+    context = {
+        "ShopName": getattr(business, "name", "Our Shop"),
+        "OwnerName": user.get_full_name() or "Business Owner",
+        "BrandPersona": getattr(config, "brand_persona", "a helpful and knowledgeable assistant"),
+        "ResponseTone": getattr(config, "response_tone", "friendly"),
+        "SupportEmail": getattr(business, "email", "support@example.com"),
+        "SupportPhone": getattr(business, "phone", "+000000000"),
+        "KeyProductCategories": categories_text,
+        "CurrentPromotions": promo_text,
+        "CurrentDateTime": timezone.now().strftime("%A, %B %d, %Y, %I:%M:%S %p %Z")
     }
-
-    # Apply AI config overrides (BrandPersona, Tone, etc.)
-    if config:
-        fallback.update({
-            "BrandPersona": config.brand_persona or fallback["BrandPersona"],
-            "ResponseTone": config.response_tone or fallback["ResponseTone"],
-        })
-
-    return system_prompt_template.format(**fallback)
+    
+    return system_prompt_template.format(**context)
