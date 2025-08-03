@@ -1,106 +1,137 @@
 from langchain_core.tools import BaseTool
 from typing import List, Type, Optional
 import logging
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr, model_validator # ✅ Use model_validator
 from django.db.models import Q
-from business.models import Product
-from django.contrib.auth import get_user_model
+from business.models import Product, ProductCategory
+from account.models import User
 
 logger = logging.getLogger(__name__)
-User = get_user_model()
+
+
+# Pydantic model for a structured Product result
+class ProductSearchResult(BaseModel):
+    id: int
+    name: str
+    price: float
+    stock: int
+    category: str
+    description: str
 
 class ProductSearchTool(BaseTool):
-    """Tool that searches for products in the database by name, price range, or category."""
+    """Tool that searches for products in the database."""
     
     name: str = "product_search_tool"
     description: str = (
-        "Search products in the database by name, price range, or category. "
+        "Searches the product catalog with multiple filters. "
+        "Use this tool to find product details by name, category, and price range. "
+        "You can also filter for products that are currently in stock. "
+        "This tool's output is structured, making it easy to use for subsequent actions like order confirmation. "
         "For product technical questions, use the product_faq_search_tool instead. "
-        "Examples: 'iphone', 'price < 1300', 'category:electronics'"
+        "Example usage: `product_search_tool(name='iphone', in_stock=True, max_price=1000)`"
     )
-    
+
+    _user: User = PrivateAttr()
+
+    def __init__(self, user: User, **kwargs):
+        super().__init__(**kwargs)
+        self._user = user
+
     class InputSchema(BaseModel):
-        query: str = Field(..., description="Search query (name, price expression, or category)")
-        user_id: Optional[int] = Field(None, description="Optional user ID to filter by business owner")
-        limit: Optional[int] = Field(10, description="Maximum number of results to return")
+        name: Optional[str] = Field(None, description="Search for a product by its name.")
+        category: Optional[str] = Field(None, description="Filter products by category name.")
+        min_price: Optional[float] = Field(None, description="Filter for products with a price greater than or equal to this value.")
+        max_price: Optional[float] = Field(None, description="Filter for products with a price less than or equal to this value.")
+        in_stock: Optional[bool] = Field(None, description="Set to `True` to filter only for products that are currently in stock.")
+        limit: Optional[int] = Field(10, description="Maximum number of results to return.")
+
+        # ✅ Corrected: Using Pydantic V2's model_validator
+        @model_validator(mode='after')
+        def check_at_least_one_filter(self):
+            if not any(
+                [
+                    self.name,
+                    self.category,
+                    self.min_price is not None,
+                    self.max_price is not None,
+                    self.in_stock is not None
+                ]
+            ):
+                raise ValueError("At least one search filter (name, category, price, or stock) must be provided.")
+            return self
     
     args_schema: Type[BaseModel] = InputSchema
     
-    def _run(self, query: str, user_id: Optional[int] = None, limit: int = 10) -> str:
-        """Search products in the database"""
+    def _run(self, **kwargs) -> str:
+        """
+        Searches products based on structured input and returns a formatted string.
+        """
         try:
-            query = query.lower().strip()
-            results = self._search_products(query, user_id, limit)
-            return self._format_results(results, query)
-        except Exception as e:
-            logger.error(f"Product search failed for query '{query}': {str(e)}")
-            return f"Error processing your query: {str(e)}"
-
-    def _search_products(self, query: str, user_id: Optional[int], limit: int) -> List[Product]:
-        """Handle the actual product search logic"""
-        queryset = Product.objects.select_related('category').all()
-        
-        if user_id:
-            queryset = queryset.filter(user_id=user_id)
-        
-        if query.startswith('price'):
-            return self._search_by_price(queryset, query, limit)
-        elif query.startswith('category:'):
-            category_name = query.replace('category:', '').strip()
-            return self._search_by_category(queryset, category_name, limit)
-        else:
-            return self._search_by_name(queryset, query, limit)
-
-    def _search_by_price(self, queryset, query: str, limit: int) -> List[Product]:
-        """Search products by price range"""
-        parts = query.split()
-        if len(parts) != 3 or parts[1] not in ["<", ">", "=", "<=", ">="]:
-            raise ValueError("Invalid price query format. Use: price <|>|<=|>=|= value")
-        
-        try:
-            price_value = float(parts[2])
+            results = self._search_products_raw(**kwargs)
+            if not results:
+                return "No products found matching your criteria."
             
-            if parts[1] == "<":
-                return list(queryset.filter(price__lt=price_value).order_by('price')[:limit])
-            elif parts[1] == "<=":
-                return list(queryset.filter(price__lte=price_value).order_by('price')[:limit])
-            elif parts[1] == ">":
-                return list(queryset.filter(price__gt=price_value).order_by('-price')[:limit])
-            elif parts[1] == ">=":
-                return list(queryset.filter(price__gte=price_value).order_by('-price')[:limit])
-            else:  # "="
-                return list(queryset.filter(price=price_value).order_by('name')[:limit])
-        except ValueError:
-            raise ValueError("Invalid price value. Must be a number")
+            return self._format_results(results)
+        except ValueError as e:
+            logger.error(f"Product search failed: {str(e)}")
+            return f"Error: {str(e)}"
+        except Exception as e:
+            logger.error(f"An unexpected error occurred during product search: {str(e)}")
+            return "An unexpected error occurred during product search."
 
-    def _search_by_name(self, queryset, query: str, limit: int) -> List[Product]:
-        """Search products by name or description"""
-        return list(queryset.filter(
-            Q(name__icontains=query) | Q(description__icontains=query)
-        ).order_by('-stock', 'price')[:limit])
-
-    def _search_by_category(self, queryset, category_name: str, limit: int) -> List[Product]:
-        """Search products by category name"""
-        return list(queryset.filter(
-            Q(category__name__icontains=category_name)
-        ).order_by('-stock', 'price')[:limit])
-
-    def _format_results(self, results: List[Product], query: str) -> str:
-        """Format the search results"""
-        if not results:
-            return f"No products found matching '{query}'"
+    def _search_products_raw(self, **kwargs) -> List[ProductSearchResult]:
+        """
+        Handles the product search and returns Pydantic models.
+        This is the method an agent would use for tool chaining.
+        """
+        queryset = Product.objects.select_related('category').filter(user=self._user)
         
-        formatted = [f"Found {len(results)} products matching '{query}':"]
+        if kwargs.get('name'):
+            queryset = queryset.filter(Q(name__icontains=kwargs['name']) | Q(description__icontains=kwargs['name']))
+        
+        if kwargs.get('category'):
+            queryset = queryset.filter(category__name__icontains=kwargs['category'])
+            
+        if kwargs.get('min_price') is not None:
+            queryset = queryset.filter(price__gte=kwargs['min_price'])
+            
+        if kwargs.get('max_price') is not None:
+            queryset = queryset.filter(price__lte=kwargs['max_price'])
+            
+        if kwargs.get('in_stock'):
+            queryset = queryset.filter(stock__gt=0)
+            
+        limit = kwargs.get('limit', 10)
+        results = list(queryset.order_by('name')[:limit])
+            
+        return [
+            ProductSearchResult(
+                id=p.id,
+                name=p.name,
+                price=float(p.price),
+                stock=p.stock,
+                category=p.category.name if p.category else "Uncategorized",
+                description=p.description
+            ) for p in results
+        ]
+
+    def _format_results(self, results: List[ProductSearchResult]) -> str:
+        """Format the search results from a list of Pydantic models"""
+        formatted_list = [f"Found {len(results)} products matching your criteria:"]
         
         for product in results:
-            category = product.category.name if product.category else "Uncategorized"
             stock_status = "In Stock" if product.stock > 0 else "Out of Stock"
-            
-            formatted.append(
-                f"\n- {product.name} (${product.price:.2f}) "
-                f"\n  Category: {category} | {stock_status} | Available: {product.stock}"
+            formatted_list.append(
+                f"\n- Product Name: {product.name}"
+                f"\n  Price: ${product.price:.2f}"
+                f"\n  Category: {product.category}"
+                f"\n  Stock: {product.stock} ({stock_status})"
                 f"\n  Description: {product.description[:100]}{'...' if len(product.description) > 100 else ''}"
                 f"\n  ID: {product.id}"
             )
         
-        return "\n".join(formatted)
+        return "\n".join(formatted_list)
+        
+    def _arun(self, *args, **kwargs):
+        """Async version not implemented."""
+        raise NotImplementedError("Async operation not supported")
