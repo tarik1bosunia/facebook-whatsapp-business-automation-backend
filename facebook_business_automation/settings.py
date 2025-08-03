@@ -35,6 +35,8 @@ ALLOWED_HOSTS = [
     'smartchatbot.click',
 ]
 
+
+
 # this is for multiple frontend single backend activation link sent in email , activation link need to fronetned domain
 # 
 FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL', 'http://localhost:3000')
@@ -344,16 +346,17 @@ SIMPLE_JWT = {
 
 }
 
-
-
 PASSWORD_RESET_TIMEOUT = 900        # 900 sec = 15 min
 
 CORS_ALLOWED_ORIGINS = [
     "https://api.smartchatbot.click",
     "https://smartchatbot.click",
-    "https://rateteach.ru.ac.bd",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://api.smartchatbot.click",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
