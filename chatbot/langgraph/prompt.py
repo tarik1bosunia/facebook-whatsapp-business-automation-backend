@@ -1,5 +1,7 @@
+# /app/chatbot/langgraph/prompt.py
+
 from langchain_core.prompts import ChatPromptTemplate
-from business.models import Promotion, BusinessProfile, Category  # Assuming a Category model exists
+from business.models import Promotion, BusinessProfile, ProductCategory
 from django.utils import timezone
 from django.db import models
 
@@ -71,9 +73,9 @@ def get_formatted_system_prompt(user):
 
     # Fetch key product categories associated with the user
     try:
-        categories = Category.objects.filter(user=user)
+        categories = ProductCategory.objects.filter(user=user)
         categories_text = ", ".join([cat.name for cat in categories]) or "General Products"
-    except (Category.DoesNotExist, AttributeError):
+    except (ProductCategory.DoesNotExist, AttributeError):
         categories_text = "General Products"
 
     # Fallback values for the prompt, derived from user and related models
