@@ -6,7 +6,7 @@ from .product_search_tool import ProductSearchTool
 from .faq_search_tool import FAQSearchTool
 from .product_faq_search import ProductFAQSearchTool
 from .order_confirmation_tool import OrderConfirmationTool
-
+from account.models import User
 logger = logging.getLogger(__name__)
 
 
@@ -14,15 +14,15 @@ class ToolManager:
     """Manager for all available tools with proper initialization and error handling"""
 
 
-    @classmethod
-    def get_tools(cls) -> List[BaseTool]:
+    @staticmethod
+    def get_tools(user: User) -> List[BaseTool]:
         """Get all available tools with initialization checks"""
         try:
             return [
                 FAQSearchTool(),
                 ProductFAQSearchTool(),
                 ProductSearchTool(),
-                OrderConfirmationTool(),
+                OrderConfirmationTool(user=user),
             ]
         except Exception as e:
             logger.error(f"Failed to initialize tools: {str(e)}")

@@ -23,7 +23,7 @@ class AgentCore:
         self.config = config_manager.get_ai_config()  
 
         # tools
-        self.tools = ToolManager().get_tools()
+        self.tools = ToolManager.get_tools(user=self.user)
 
         # LLM
         self.llm = LLMFactory.create_llm(
