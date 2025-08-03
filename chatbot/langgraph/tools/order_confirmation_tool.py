@@ -1,13 +1,13 @@
 from langchain_core.tools import BaseTool
 from typing import Type, Optional
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr # ✅ PrivateAttr is now imported
 from customer.models import Order, Customer
 from django.contrib.auth import get_user_model
 import logging
 from django.db import models
 
 logger = logging.getLogger(__name__)
-from  account.models import User
+from account.models import User
 
 class OrderConfirmationTool(BaseTool):
     """
@@ -28,11 +28,15 @@ class OrderConfirmationTool(BaseTool):
         "Do not use this tool to answer questions about orders or products; use it strictly for creation."
     )
 
-    user: User = PrivateAttr()
+    # ✅ The problematic '_user' attribute is removed and replaced with a proper PrivateAttr
+    # This attribute will hold the Django User object
+    _user: User = PrivateAttr()
 
     def __init__(self, user: User, **kwargs):
+        # ✅ The super().__init__ call will handle the BaseModel fields (name, description, etc.)
+        # Pydantic v2 requires `super().__init__` to be called before setting private attributes.
         super().__init__(**kwargs)
-        self.user = user
+        self._user = user
     
     class InputSchema(BaseModel):
         order_number: str = Field(
@@ -95,9 +99,9 @@ class OrderConfirmationTool(BaseTool):
         Creates a new order in the database, creating the customer first if needed.
         """
         try:
-            # 1. Find or create the customer using the tool's self.user object
+            # 1. Find or create the customer using the tool's self._user object
             customer = self._get_or_create_customer(
-                user_id=self.user.id,
+                user_id=self._user.id,
                 customer_id=customer_id,
                 customer_name=customer_name,
                 customer_phone=customer_phone,
