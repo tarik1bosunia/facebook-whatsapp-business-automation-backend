@@ -21,8 +21,8 @@ class ToolManager:
             return [
                 FAQSearchTool(),
                 ProductFAQSearchTool(),
-                ProductSearchTool(),
-                OrderConfirmationTool(user=user),
+                ProductSearchTool(user=user),
+                OrderConfirmationTool(user=user)
             ]
         except Exception as e:
             logger.error(f"Failed to initialize tools: {str(e)}")
