@@ -49,6 +49,9 @@ jobs:
 
             echo "🧽 Cleaning up unused Docker images..."
             docker image prune -f
+
+            echo "🔄 Reloading Nginx after deployment..."
+            sudo nginx -t && sudo systemctl reload nginx
           EOF
 
 
