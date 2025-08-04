@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/messaging/', include('messaging.urls')),
     path('api/knowledge-base/', include('knowledge_base.urls')),
     path('api/analytics/', include('analytics.urls')),
+    path('api/facebook-integration/', include('facebook_integration.urls')),
     # path('api/integrations/', include('apps.integrations.urls')),
     path('health/', HealthCheckView.as_view()),
 ]
