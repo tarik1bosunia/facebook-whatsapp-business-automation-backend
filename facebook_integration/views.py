@@ -7,11 +7,12 @@ from .serializers import FacebookAuthSerializer
 from business.models.integrations import FacebookIntegration
 from django.contrib.auth import get_user_model
 from account.permissions import IsAuthenticatedAndVerified # Import the permission class
-
+from utils.renderers import CustomRenderer
 User = get_user_model()
 
 class FacebookAuthView(APIView):
     permission_classes = [IsAuthenticatedAndVerified] # Apply the permission class
+    renderer_classes = [CustomRenderer]
 
     def post(self, request):
         serializer = FacebookAuthSerializer(data=request.data)
