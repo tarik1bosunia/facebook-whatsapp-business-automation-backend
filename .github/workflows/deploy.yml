@@ -47,6 +47,10 @@ jobs:
             echo "🔧 Building and starting containers..."
             docker compose up --build -d
 
+            echo "Applying Django migrations..."
+            docker compose exec web python manage.py makemigrations business
+            docker compose exec web python manage.py migrate
+
             echo "🧽 Cleaning up unused Docker images..."
             docker image prune -f
 
