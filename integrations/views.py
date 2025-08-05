@@ -23,13 +23,14 @@ class FacebookAuthView(APIView):
     renderer_classes = [CustomRenderer]
 
     def post(self, request):
+        print("hi ji")
         serializer = FacebookAuthSerializer(data=request.data)
         if serializer.is_valid():
             short_lived_token = serializer.validated_data['access_token']
             user = request.user # User is guaranteed to be authenticated and verified by permission_classes
 
-            APP_ID = serializer.validated_data.get('app_id', os.environ.get('FACEBOOK_APP_ID'))
-            APP_SECRET = serializer.validated_data.get('app_secret', os.environ.get('FACEBOOK_APP_SECRET'))
+            APP_ID = serializer.validated_data.get('app_id')
+            APP_SECRET = serializer.validated_data.get('app_secret')
 
 
             # Exchange short-lived token for long-lived user access token

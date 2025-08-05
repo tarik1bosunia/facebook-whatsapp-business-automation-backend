@@ -1,0 +1,7 @@
+services:
+  server:
+    volumes:
+      - .:/app # Mount the current directory to /app in the container for live code changes
+    environment:
+      - DJANGO_ENV=development # Set Django environment to development for hot-reloading
+    command: python manage.py runserver 0.0.0.0:8000

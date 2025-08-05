@@ -33,7 +33,7 @@ services:
     volumes:
       # ✅ Use absolute path for static & media volumes for Nginx + Django
       - /var/www/fbaserver/static:/app/staticfiles      
-      - /var/www/fbaserver/media:/app/media         
+      - /var/www/fbaserver/media:/app/media
       - ./.env:/app/.env
 
     env_file:
