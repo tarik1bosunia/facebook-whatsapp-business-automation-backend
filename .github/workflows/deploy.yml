@@ -50,6 +50,8 @@ jobs:
             echo "Applying Django migrations..."
             docker compose exec server python manage.py makemigrations business
             docker compose exec server python manage.py migrate
+            docker compose exec fbaserver-container python manage.py makemigrations business
+            docker compose exec fbaserver-container python manage.py migrate
 
             echo "🧽 Cleaning up unused Docker images..."
             docker image prune -f
