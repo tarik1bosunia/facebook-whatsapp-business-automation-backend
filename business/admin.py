@@ -53,6 +53,8 @@ from .models import FacebookIntegration, WhatsAppIntegration
 class FacebookIntegrationAdmin(admin.ModelAdmin):
     list_display = (
         'user',
+        'app_id',
+        'app_secret',
         'platform_id',
         'verify_token',
         'is_connected',

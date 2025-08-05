@@ -79,6 +79,21 @@ class PlatformIntegration(models.Model):
 
 
 class FacebookIntegration(PlatformIntegration):
+    app_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name=_("Facebook App ID"),
+        help_text=_("The Facebook App ID for the integration")
+    )
+    app_secret = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name=_("Facebook App Secret"),
+        help_text=_("The Facebook App Secret for the integration")
+    )
+
     class Meta:
         verbose_name = _("Facebook Integration")
         verbose_name_plural = _("Facebook Integrations")

@@ -3,44 +3,76 @@ from rest_framework.response import Response
 from rest_framework import status
 import requests
 import os
-from .serializers import FacebookAuthSerializer
+from .serializers import FacebookAccessTokenSerializer, FacebookAppSerializer, FacebookVerifyTokenSerializer
 from business.models.integrations import FacebookIntegration
 from django.contrib.auth import get_user_model
-from account.permissions import IsAuthenticatedAndVerified # Import the permission class
+from account.permissions import IsAuthenticatedAndVerified
 from utils.renderers import CustomRenderer
 User = get_user_model()
 
 
-class FacebookAuthView(APIView):
+class FacebookAppConfigView(APIView):
     """
     {
-        "access_token": "YOUR_SHORT_LIVED_USER_ACCESS_TOKEN",
         "app_id": "YOUR_FACEBOOK_APP_ID",
         "app_secret": "YOUR_FACEBOOK_APP_SECRET"
     }
     """
-    permission_classes = [IsAuthenticatedAndVerified] # Apply the permission class
+    permission_classes = [IsAuthenticatedAndVerified]
     renderer_classes = [CustomRenderer]
 
     def post(self, request):
-        print("hi ji")
-        serializer = FacebookAuthSerializer(data=request.data)
+        serializer = FacebookAppSerializer(data=request.data)
+        if serializer.is_valid():
+            app_id = serializer.validated_data.get('app_id')
+            app_secret = serializer.validated_data.get('app_secret')
+            user = request.user
+
+            facebook_integration, created = FacebookIntegration.objects.get_or_create(user=user)
+            if app_id:
+                facebook_integration.app_id = app_id
+            if app_secret:
+                facebook_integration.app_secret = app_secret
+            facebook_integration.save()
+
+            return Response({"message": "Facebook App ID and Secret updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookAccessTokenView(APIView):
+    """
+    {
+        "access_token": "YOUR_SHORT_LIVED_USER_ACCESS_TOKEN",
+    }
+    """
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookAccessTokenSerializer(data=request.data)
         if serializer.is_valid():
             short_lived_token = serializer.validated_data['access_token']
-            user = request.user # User is guaranteed to be authenticated and verified by permission_classes
+            user = request.user
+            
+            # Retrieve APP_ID and APP_SECRET from FacebookIntegration model
+            try:
+                facebook_integration = FacebookIntegration.objects.get(user=user)
+                APP_ID = facebook_integration.app_id
+                APP_SECRET = facebook_integration.app_secret
+            except FacebookIntegration.DoesNotExist:
+                return Response({"error": "Facebook App ID and Secret not configured. Please set them first."}, status=status.HTTP_400_BAD_REQUEST)
 
-            APP_ID = serializer.validated_data.get('app_id')
-            APP_SECRET = serializer.validated_data.get('app_secret')
+            if not APP_ID or not APP_SECRET:
+                return Response({"error": "Facebook App ID and Secret are required but not set."}, status=status.HTTP_400_BAD_REQUEST)
 
-
-            # Exchange short-lived token for long-lived user access token
+                       # Exchange short-lived token for long-lived user access token
             GRAPH_API_VERSION = os.environ.get('FACEBOOK_GRAPH_API_VERSION', 'v23.0') # Default to v20.0 if not set
             exchange_url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/oauth/access_token?grant_type=fb_exchange_token&client_id={APP_ID}&client_secret={APP_SECRET}&fb_exchange_token={short_lived_token}"
-            
-            
+
+
             print(f"DEBUG: Using FACEBOOK_APP_ID: {APP_ID}")
             print(f"DEBUG: Using FACEBOOK_APP_SECRET: {APP_SECRET}")
             print(f"DEBUG: FACEBOOK_GRAPH_API_VERSION: {GRAPH_API_VERSION}")
+            
             try:
                 exchange_response = requests.get(exchange_url)
                 exchange_response.raise_for_status()
@@ -67,16 +99,38 @@ class FacebookAuthView(APIView):
                     return Response({"error": "Could not obtain page access token."}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Save the page access token to FacebookIntegration model
-                facebook_integration, created = FacebookIntegration.objects.get_or_create(user=user)
                 facebook_integration.access_token = page_access_token
                 facebook_integration.platform_id = page_id
-                facebook_integration.is_connected = True
                 facebook_integration.save()
 
-                return Response({"message": "Facebook integration successful."}, status=status.HTTP_200_OK)
+                return Response({"message": "Facebook Access Token updated successfully."}, status=status.HTTP_200_OK)
+
 
             except requests.exceptions.RequestException as e:
                 return Response({"error": f"Facebook API error: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             except Exception as e:
                 return Response({"error": f"An unexpected error occurred: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookVerifyTokenView(APIView):
+    """
+    {
+        "verify_token": "YOUR_VERIFY_TOKEN"
+    }
+    """
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookVerifyTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            verify_token = serializer.validated_data['verify_token']
+            user = request.user
+
+            facebook_integration, created = FacebookIntegration.objects.get_or_create(user=user)
+            facebook_integration.verify_token = verify_token
+            facebook_integration.save()
+
+            return Response({"message": "Facebook Verify Token updated successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
