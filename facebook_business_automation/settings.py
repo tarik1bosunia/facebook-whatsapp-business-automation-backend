@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     'business',
     'analytics',
     'llm_integration',
+    'integrations',
     
     # deploy
     "django_extensions",

@@ -10,7 +10,15 @@ from account.permissions import IsAuthenticatedAndVerified # Import the permissi
 from utils.renderers import CustomRenderer
 User = get_user_model()
 
+
 class FacebookAuthView(APIView):
+    """
+    {
+        "access_token": "YOUR_SHORT_LIVED_USER_ACCESS_TOKEN",
+        "app_id": "YOUR_FACEBOOK_APP_ID",
+        "app_secret": "YOUR_FACEBOOK_APP_SECRET"
+    }
+    """
     permission_classes = [IsAuthenticatedAndVerified] # Apply the permission class
     renderer_classes = [CustomRenderer]
 
@@ -20,14 +28,18 @@ class FacebookAuthView(APIView):
             short_lived_token = serializer.validated_data['access_token']
             user = request.user # User is guaranteed to be authenticated and verified by permission_classes
 
-            APP_ID = os.environ.get('FACEBOOK_APP_ID')
-            APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
-            print(f"DEBUG: FACEBOOK_APP_ID: {APP_ID}")
-            print(f"DEBUG: FACEBOOK_APP_SECRET: {APP_SECRET}")
+            APP_ID = serializer.validated_data.get('app_id', os.environ.get('FACEBOOK_APP_ID'))
+            APP_SECRET = serializer.validated_data.get('app_secret', os.environ.get('FACEBOOK_APP_SECRET'))
+
 
             # Exchange short-lived token for long-lived user access token
-            exchange_url = f"https://graph.facebook.com/v23.0/oauth/access_token?grant_type=fb_exchange_token&client_id={APP_ID}&client_secret={APP_SECRET}&fb_exchange_token={short_lived_token}"
+            GRAPH_API_VERSION = os.environ.get('FACEBOOK_GRAPH_API_VERSION', 'v23.0') # Default to v20.0 if not set
+            exchange_url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/oauth/access_token?grant_type=fb_exchange_token&client_id={APP_ID}&client_secret={APP_SECRET}&fb_exchange_token={short_lived_token}"
             
+            
+            print(f"DEBUG: Using FACEBOOK_APP_ID: {APP_ID}")
+            print(f"DEBUG: Using FACEBOOK_APP_SECRET: {APP_SECRET}")
+            print(f"DEBUG: FACEBOOK_GRAPH_API_VERSION: {GRAPH_API_VERSION}")
             try:
                 exchange_response = requests.get(exchange_url)
                 exchange_response.raise_for_status()
@@ -38,7 +50,7 @@ class FacebookAuthView(APIView):
                     return Response({"error": "Could not obtain long-lived user token."}, status=status.HTTP_400_BAD_REQUEST)
 
                 # Get long-lived page access token
-                pages_url = f"https://graph.facebook.com/v23.0/me/accounts?access_token={long_lived_user_token}"
+                pages_url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/me/accounts?access_token={long_lived_user_token}"
                 pages_response = requests.get(pages_url)
                 pages_response.raise_for_status()
                 pages_data = pages_response.json()
