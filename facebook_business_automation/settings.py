@@ -76,7 +76,6 @@ INSTALLED_APPS = [
     'business',
     'analytics',
     'llm_integration',
-    'facebook_integration', # New app for Facebook integration
     
     # deploy
     "django_extensions",

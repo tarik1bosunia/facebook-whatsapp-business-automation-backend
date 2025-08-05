@@ -22,6 +22,8 @@ class FacebookAuthView(APIView):
 
             APP_ID = os.environ.get('FACEBOOK_APP_ID')
             APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
+            print(f"DEBUG: FACEBOOK_APP_ID: {APP_ID}")
+            print(f"DEBUG: FACEBOOK_APP_SECRET: {APP_SECRET}")
 
             # Exchange short-lived token for long-lived user access token
             exchange_url = f"https://graph.facebook.com/v23.0/oauth/access_token?grant_type=fb_exchange_token&client_id={APP_ID}&client_secret={APP_SECRET}&fb_exchange_token={short_lived_token}"
