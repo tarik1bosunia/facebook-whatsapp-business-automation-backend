@@ -23,20 +23,6 @@ class FacebookAccessTokenSerializer(serializers.Serializer):
             raise serializers.ValidationError("Facebook App ID and Secret not configured. Please set them first.")
         return data
 
-    def validate(self, data):
-        from business.models.integrations import FacebookIntegration
-        request = self.context.get('request')
-        if not request:
-            raise serializers.ValidationError("Request context is required for this serializer.")
-
-        user = request.user
-        try:
-            facebook_integration = FacebookIntegration.objects.get(user=user)
-            if not facebook_integration.app_id or not facebook_integration.app_secret:
-                raise serializers.ValidationError("Facebook App ID and Secret must be configured before setting the access token.")
-        except FacebookIntegration.DoesNotExist:
-            raise serializers.ValidationError("Facebook App ID and Secret not configured. Please set them first.")
-        return data
 
 class FacebookVerifyTokenSerializer(serializers.Serializer):
     verify_token = serializers.CharField(max_length=100)
