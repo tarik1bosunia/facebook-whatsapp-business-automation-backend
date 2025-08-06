@@ -12,6 +12,7 @@ from messaging.models.conversation import Conversation
 from messaging.services import conversation_service, whatsapp_service
 from messaging.utils import facebook_api
 from messaging.validators import validate_message_content
+from business.models.integrations import FacebookIntegration
 
 import logging
 logger = logging.getLogger(__name__)
@@ -348,7 +349,12 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
     def send_facebook_message(self, social_media_id: str, message: str):
         """Send message via Facebook API."""
         try:
-            facebook_api.send_message(social_media_id, message)
+            facebook_integration = FacebookIntegration.objects.get(user=self.user)
+            access_token = facebook_integration.access_token
+            facebook_api.send_message(social_media_id, message, access_token)
+        except FacebookIntegration.DoesNotExist:
+            logger.error(f"FacebookIntegration not found for user {self.user.email}. Cannot send message.")
+            raise
         except Exception as e:
             logger.error(f"Facebook API error: {str(e)}")
             raise
@@ -364,3 +370,4 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
         except Exception as e:
             logger.error(f"WhatsApp API error: {str(e)}")
             raise
+

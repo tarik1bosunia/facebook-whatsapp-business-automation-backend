@@ -31,12 +31,6 @@ Company values:
 - Ethical business practices"""
 
 class AIModel(models.Model):
-    # PROVIDER_CHOICES = [
-    #     ('GOOGLE', 'Google'),
-    #     ('OPENAI', 'OpenAI'),
-    #     ('ANTHROPIC', 'Anthropic'),
-    #     ('CUSTOM', 'Custom'),
-    # ]
     code = models.CharField(max_length=100, unique=True, help_text="Identifier used in APIs, e.g., 'gemini-2.0-flash'")
     name = models.CharField(max_length=100, help_text="Human-readable name, e.g., 'Gemini 2.0 Flash'")
     is_custom = models.BooleanField(default=False) # possibly remove in future and add provider

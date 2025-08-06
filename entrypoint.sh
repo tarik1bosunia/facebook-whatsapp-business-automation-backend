@@ -5,6 +5,10 @@ set -e
 
 echo "Starting entrypoint script with DJANGO_ENV=$DJANGO_ENV"
 
+# Wait for the database to be ready (optional, but good for robustness in Docker)
+echo "Waiting for database..."
+sleep 5
+
 # Run database migrations
 python manage.py makemigrations --noinput
 python manage.py migrate
@@ -13,6 +17,7 @@ python manage.py create_initial_users || true
 python manage.py seed_products || true
 python manage.py seed_promotions || true
 python manage.py seed_faqs || true
+python manage.py seed_aimodels || true
 
 # Collect static files (if in production)
 if [ "$DJANGO_ENV" = "production" ]; then

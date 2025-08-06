@@ -1,6 +1,7 @@
 from messaging.models import PLATFORM
 from messaging.utils import facebook_api
 from .base_message_type_handler import BaseMessageTypeHandler
+from business.models.integrations import FacebookIntegration
 
 class BaseMessageTypeHandlerMessenger(BaseMessageTypeHandler):
     PLATFORM = PLATFORM.FACEBOOK
@@ -11,7 +12,14 @@ class BaseMessageTypeHandlerMessenger(BaseMessageTypeHandler):
         self.messenger_media_file = None
 
     def send_platform_message(self, recipient: str, text: str) -> None:
-        facebook_api.send_message(recipient, text)
+        try:
+            facebook_integration = FacebookIntegration.objects.get(user=self.user)
+            access_token = facebook_integration.access_token
+            facebook_api.send_message(recipient, text, access_token)
+        except FacebookIntegration.DoesNotExist:
+            print(f"ERROR: FacebookIntegration not found for user {self.user.email}. Cannot send message.")
+        except Exception as e:
+            print(f"ERROR sending message via Facebook API: {e}")
 
 
 
@@ -123,3 +131,4 @@ class BaseMessageTypeHandlerMessenger(BaseMessageTypeHandler):
 
 
         
+

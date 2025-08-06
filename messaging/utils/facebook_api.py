@@ -2,13 +2,13 @@ import requests
 from django.conf import settings
 from ..exceptions import FacebookAPIError
 
-def send_message(recipient_id, text):
+def send_message(recipient_id, text, access_token):
     url = "https://graph.facebook.com/v23.0/me/messages"
     
     try:
         response = requests.post(
             url,
-            params={"access_token": settings.FB_PAGE_ACCESS_TOKEN},
+            params={"access_token": access_token},
             headers={"Content-Type": "application/json"},
             json={
                 "recipient": {"id": recipient_id},
