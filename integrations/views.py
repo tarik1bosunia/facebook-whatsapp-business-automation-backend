@@ -138,3 +138,77 @@ class FacebookVerifyTokenView(APIView):
 
             return Response({"message": "Facebook Verify Token updated successfully."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookIntegrationStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def get(self, request):
+        user = request.user
+        try:
+            facebook_integration = FacebookIntegration.objects.get(user=user)
+            serializer = FacebookIntegrationStatusSerializer({
+                'app_id_set': bool(facebook_integration.app_id),
+                'app_secret_set': bool(facebook_integration.app_secret),
+                'long_live_token_set': bool(facebook_integration.access_token),
+                'verify_token_set': bool(facebook_integration.verify_token),
+                'is_connected': facebook_integration.is_connected,
+                'is_send_auto_reply': facebook_integration.is_send_auto_reply,
+                'is_send_notification': facebook_integration.is_send_notification,
+            })
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except FacebookIntegration.DoesNotExist:
+            return Response({
+                'app_id_set': False,
+                'app_secret_set': False,
+                'long_live_token_set': False,
+                'verify_token_set': False,
+                'is_connected': False,
+                'is_send_auto_reply': False,
+                'is_send_notification': False,
+            }, status=status.HTTP_200_OK)
+
+class FacebookAutoReplyStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookAutoReplyStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            is_send_auto_reply = serializer.validated_data['is_send_auto_reply']
+            user = request.user
+            facebook_integration, created = FacebookIntegration.objects.get_or_create(user=user)
+            facebook_integration.is_send_auto_reply = is_send_auto_reply
+            facebook_integration.save()
+            return Response({"message": "Facebook auto-reply status updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookNotificationStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookNotificationStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            is_send_notification = serializer.validated_data['is_send_notification']
+            user = request.user
+            facebook_integration, created = FacebookIntegration.objects.get_or_create(user=user)
+            facebook_integration.is_send_notification = is_send_notification
+            facebook_integration.save()
+            return Response({"message": "Facebook notification status updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookConnectionStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookConnectionStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            is_connected = serializer.validated_data['is_connected']
+            user = request.user
+            facebook_integration, created = FacebookIntegration.objects.get_or_create(user=user)
+            facebook_integration.is_connected = is_connected
+            facebook_integration.save()
+            return Response({"message": "Facebook connection status updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
