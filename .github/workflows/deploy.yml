@@ -47,11 +47,13 @@ jobs:
             echo "🔧 Building and starting containers..."
             docker compose up --build -d
 
+            
+            echo "⏳ Waiting for Django container to be ready..."
+            sleep 10  # Wait a bit for DB/container to be healthy
+
             echo "Applying Django migrations..."
             docker compose exec server python manage.py makemigrations business
             docker compose exec server python manage.py migrate
-            docker compose exec fbaserver-container python manage.py makemigrations business
-            docker compose exec fbaserver-container python manage.py migrate
 
             echo "🧽 Cleaning up unused Docker images..."
             docker image prune -f
