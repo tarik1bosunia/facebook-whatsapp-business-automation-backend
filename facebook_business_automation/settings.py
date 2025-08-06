@@ -28,6 +28,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = str(os.environ.get('DEBUG')) == "1"
 
 ALLOWED_HOSTS = [
+    "188.165.79.187",
     'localhost',
     'wholly-notable-raccoon.ngrok-free.app', # temporary for testing webhook
     '127.0.0.1',
