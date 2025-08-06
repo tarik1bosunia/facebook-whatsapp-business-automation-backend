@@ -45,13 +45,13 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
 
     async def connect(self):
         """Handle new WebSocket connection."""
-        print('======================== WEBSOKET  connected... ============')
+        logger.debug('======================== WEBSOCKET connected... ============')
         self.connected_at = datetime.now()
-        # logger.info(f"New WebSocket connection attempt: {self.scope}")
-        # print('channel layer::', self.channel_layer)
+        logger.debug(f"New WebSocket connection attempt: {self.scope}")
+        logger.debug(f"Channel layer: {self.channel_layer}")
 
         # Update channel name immediately upon connection
-        print('channel name::', self.channel_name)
+        logger.debug(f"Channel name: {self.channel_name}")
 
         # Get authenticated user from scope (set by JWTAuthMiddleware)
         self.user = self.scope.get("user")
@@ -95,7 +95,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
 
             if message_type == MessageTypes.HEARTBEAT.value:
                 self.last_heartbeat = datetime.now()
-                print("Heartbeat received")
+                logger.debug("Heartbeat received")
                 await self.send_heartbeat_response()
                 return
 
@@ -166,7 +166,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
             # Get conversation from database
             conversation = await self.get_conversation(conversation_id)
             if not conversation:
-                print(f"Conversation {conversation_id} not found")
+                logger.warning(f"Conversation {conversation_id} not found")
                 return
 
             # Save message to database
@@ -207,16 +207,13 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
 
     async def chat_message(self, event):
         """Handle incoming chat messages from the group."""
-        print("====================== CHAT MESSAGE =========")
-        # print("sender channel::", event.get("sender_channel"))
-        if event.get("sender_channel") == self.channel_name:
-            return  # Skip if this is the sender's channel
-        print("sender channel::", event.get("sender_channel"))
-        print("sender channel self::", self.channel_name)
+        logger.debug("====================== CHAT MESSAGE =========")
+        logger.debug(f"Sender channel: {event.get('sender_channel')}")
+        logger.debug(f"Self channel: {self.channel_name}")
 
-        # Forward the message to the client as text
-        # message = json.loads(event['message'])
-        # conversation_id = message.pop('conversation_id', None)
+        if event.get("sender_channel") == self.channel_name:
+            logger.debug("Skipping message as it originated from this channel.")
+            return  # Skip if this is the sender's channel
 
         try:
             message = json.loads(event["message"])
@@ -231,7 +228,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
             })
 
         except json.JSONDecodeError as e:
-            print(f"Error decoding message: {str(e)}")
+            logger.error(f"Error decoding message: {str(e)}")
 
         except Exception as e:
             logger.error(f"Error sending message: {str(e)}")
@@ -253,7 +250,7 @@ class ChatAsyncJsonWebsocketConsumer(AsyncJsonWebsocketConsumer):
                 "contacts": payload.get('contacts', []),
             }
 
-            print("channel name from broadcast self", self.channel_name)
+            logger.debug(f"Channel name from broadcast self: {self.channel_name}")
 
             await self.channel_layer.group_send(
                 self.group_name,
