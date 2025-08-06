@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import requests
 import os
-from .serializers import FacebookAccessTokenSerializer, FacebookAppSerializer, FacebookVerifyTokenSerializer
+from .serializers import FacebookAccessTokenSerializer, FacebookAppSerializer, FacebookVerifyTokenSerializer, FacebookIntegrationStatusSerializer, FacebookAutoReplyStatusSerializer, FacebookNotificationStatusSerializer, FacebookConnectionStatusSerializer
 from business.models.integrations import FacebookIntegration
 from django.contrib.auth import get_user_model
 from account.permissions import IsAuthenticatedAndVerified
@@ -48,21 +48,25 @@ class FacebookAccessTokenView(APIView):
     renderer_classes = [CustomRenderer]
 
     def post(self, request):
-        serializer = FacebookAccessTokenSerializer(data=request.data)
+        serializer = FacebookAccessTokenSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             short_lived_token = serializer.validated_data['access_token']
             user = request.user
             
             # Retrieve APP_ID and APP_SECRET from FacebookIntegration model
+            # This logic is now handled by the serializer's validate method
             try:
                 facebook_integration = FacebookIntegration.objects.get(user=user)
                 APP_ID = facebook_integration.app_id
                 APP_SECRET = facebook_integration.app_secret
             except FacebookIntegration.DoesNotExist:
+                # This case should ideally be caught by the serializer's validation
+                # but kept as a fallback
                 return Response({"error": "Facebook App ID and Secret not configured. Please set them first."}, status=status.HTTP_400_BAD_REQUEST)
 
-            if not APP_ID or not APP_SECRET:
-                return Response({"error": "Facebook App ID and Secret are required but not set."}, status=status.HTTP_400_BAD_REQUEST)
+            # The serializer now handles the validation of APP_ID and APP_SECRET
+            # if not APP_ID or not APP_SECRET:
+            #     return Response({"error": "Facebook App ID and Secret are required but not set."}, status=status.HTTP_400_BAD_REQUEST)
 
                        # Exchange short-lived token for long-lived user access token
             GRAPH_API_VERSION = os.environ.get('FACEBOOK_GRAPH_API_VERSION', 'v23.0') # Default to v20.0 if not set
@@ -133,4 +137,98 @@ class FacebookVerifyTokenView(APIView):
             facebook_integration.save()
 
             return Response({"message": "Facebook Verify Token updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookIntegrationStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def get(self, request):
+        user = request.user
+        try:
+            facebook_integration = FacebookIntegration.objects.get(user=user)
+            app_id_set = bool(facebook_integration.app_id)
+            app_secret_set = bool(facebook_integration.app_secret)
+            long_live_token_set = bool(facebook_integration.access_token) # access_token is the long-lived token
+            verify_token_set = bool(facebook_integration.verify_token)
+            is_connected = facebook_integration.is_connected
+            is_send_auto_reply = facebook_integration.is_send_auto_reply
+            is_send_notification = facebook_integration.is_send_notification
+        except FacebookIntegration.DoesNotExist:
+            app_id_set = False
+            app_secret_set = False
+            long_live_token_set = False
+            verify_token_set = False
+            is_connected = False
+            is_send_auto_reply = False
+            is_send_notification = False
+
+        data = {
+            "app_id_set": app_id_set,
+            "app_secret_set": app_secret_set,
+            "long_live_token_set": long_live_token_set,
+            "verify_token_set": verify_token_set,
+            "is_connected": is_connected,
+            "is_send_auto_reply": is_send_auto_reply,
+            "is_send_notification": is_send_notification,
+        }
+        serializer = FacebookIntegrationStatusSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FacebookAutoReplyStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookAutoReplyStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            is_send_auto_reply = serializer.validated_data['is_send_auto_reply']
+            user = request.user
+            
+            try:
+                facebook_integration = FacebookIntegration.objects.get(user=user)
+                facebook_integration.is_send_auto_reply = is_send_auto_reply
+                facebook_integration.save()
+                return Response({"message": "Facebook auto-reply status updated successfully."}, status=status.HTTP_200_OK)
+            except FacebookIntegration.DoesNotExist:
+                return Response({"error": "Facebook Integration not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookNotificationStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookNotificationStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            is_send_notification = serializer.validated_data['is_send_notification']
+            user = request.user
+            
+            try:
+                facebook_integration = FacebookIntegration.objects.get(user=user)
+                facebook_integration.is_send_notification = is_send_notification
+                facebook_integration.save()
+                return Response({"message": "Facebook notification status updated successfully."}, status=status.HTTP_200_OK)
+            except FacebookIntegration.DoesNotExist:
+                return Response({"error": "Facebook Integration not found for this user."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FacebookConnectionStatusView(APIView):
+    permission_classes = [IsAuthenticatedAndVerified]
+    renderer_classes = [CustomRenderer]
+
+    def post(self, request):
+        serializer = FacebookConnectionStatusSerializer(data=request.data)
+        if serializer.is_valid():
+            is_connected = serializer.validated_data['is_connected']
+            user = request.user
+            
+            try:
+                facebook_integration = FacebookIntegration.objects.get(user=user)
+                facebook_integration.is_connected = is_connected
+                facebook_integration.save()
+                return Response({"message": "Facebook connection status updated successfully."}, status=status.HTTP_200_OK)
+            except FacebookIntegration.DoesNotExist:
+                return Response({"error": "Facebook Integration not found for this user."}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
