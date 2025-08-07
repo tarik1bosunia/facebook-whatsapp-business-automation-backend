@@ -44,5 +44,3 @@ class FacebookNotificationStatusSerializer(serializers.Serializer):
 
 class FacebookConnectionStatusSerializer(serializers.Serializer):
     is_connected = serializers.BooleanField()
-
-    verify_token_set = serializers.BooleanField()
