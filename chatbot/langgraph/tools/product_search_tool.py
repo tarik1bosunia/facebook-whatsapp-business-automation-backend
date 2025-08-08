@@ -23,9 +23,10 @@ class ProductSearchTool(BaseTool):
     
     name: str = "product_search_tool"
     description: str = (
-        "Searches the product catalog with multiple filters. "
+        "Searches the product catalog. "
         "Use this tool to find product details by name, category, and price range. "
         "You can also filter for products that are currently in stock. "
+        "If no filters are provided, it will return a general list of available products. " # <-- Add this line
         "This tool's output is structured, making it easy to use for subsequent actions like order confirmation. "
         "For product technical questions, use the product_faq_search_tool instead. "
         "Example usage: `product_search_tool(name='iphone', in_stock=True, max_price=1000)`"
@@ -46,19 +47,19 @@ class ProductSearchTool(BaseTool):
         limit: Optional[int] = Field(10, description="Maximum number of results to return.")
 
         # ✅ Corrected: Using Pydantic V2's model_validator
-        @model_validator(mode='after')
-        def check_at_least_one_filter(self):
-            if not any(
-                [
-                    self.name,
-                    self.category,
-                    self.min_price is not None,
-                    self.max_price is not None,
-                    self.in_stock is not None
-                ]
-            ):
-                raise ValueError("At least one search filter (name, category, price, or stock) must be provided.")
-            return self
+        # @model_validator(mode='after')
+        # def check_at_least_one_filter(self):
+        #     if not any(
+        #         [
+        #             self.name,
+        #             self.category,
+        #             self.min_price is not None,
+        #             self.max_price is not None,
+        #             self.in_stock is not None
+        #         ]
+        #     ):
+        #         raise ValueError("At least one search filter (name, category, price, or stock) must be provided.")
+        #     return self
     
     args_schema: Type[BaseModel] = InputSchema
     
@@ -82,9 +83,20 @@ class ProductSearchTool(BaseTool):
     def _search_products_raw(self, **kwargs) -> List[ProductSearchResult]:
         """
         Handles the product search and returns Pydantic models.
-        This is the method an agent would use for tool chaining.
+        For general queries, it returns the newest products.
         """
         queryset = Product.objects.select_related('category').filter(user=self._user)
+        
+        
+        # --- Start of new logic ---
+        filters_applied = any([
+            kwargs.get('name'),
+            kwargs.get('category'),
+            kwargs.get('min_price') is not None,
+            kwargs.get('max_price') is not None,
+            kwargs.get('in_stock') is not None
+        ])
+        # --- End of new logic ---
         
         if kwargs.get('name'):
             queryset = queryset.filter(Q(name__icontains=kwargs['name']) | Q(description__icontains=kwargs['name']))
@@ -103,6 +115,16 @@ class ProductSearchTool(BaseTool):
             
         limit = kwargs.get('limit', 10)
         results = list(queryset.order_by('name')[:limit])
+        
+        
+        # --- Modified result fetching ---
+        if not filters_applied:
+        # For general queries, use the default ordering ('-created_at') to get the newest products.
+            results = list(queryset[:limit])
+        else:
+        # For specific searches, order by name for predictable results.
+            results = list(queryset.order_by('name')[:limit])
+        # --- End of modified logic --
             
         return [
             ProductSearchResult(
