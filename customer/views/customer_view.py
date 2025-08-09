@@ -12,7 +12,7 @@ from customer.serializers import CustomerWithSocialMediaSerializer
 class CustomerCreateUpdateView(generics.CreateAPIView, generics.UpdateAPIView):
     queryset = Customer.objects.all()
     serializer_class = CustomerWithSocialMediaSerializer
-    lookup_field = 'id'  # or 'pk', depending on your URL
+    lookup_field = 'id'
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -22,8 +22,8 @@ class CustomerViewSet(viewsets.ModelViewSet):
     ).order_by('-updated_at')
     serializer_class = CustomerSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status']
-    search_fields = ['name', 'email', 'phone']
+    filterset_fields = ['status', 'city', 'police_station']
+    search_fields = ['name', 'phone', 'city', 'police_station', 'area']
     ordering_fields = ['name', 'orders_count', 'total_spent', 'created_at']
     ordering = ['-updated_at']
     pagination_class = None

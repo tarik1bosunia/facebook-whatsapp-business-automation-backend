@@ -21,7 +21,7 @@ class CustomerWithSocialMediaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['name', 'email', 'phone', 'social_media_ids']
+        fields = ['name', 'phone', 'city', 'police_station', 'area', 'social_media_ids']
 
     def create(self, validated_data):
         social_media_data = validated_data.pop('social_media_ids', [])
@@ -68,52 +68,39 @@ class SocialMediaUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialMediaUser
         fields = ['platform', 'avatar_url']
+        
+        
 
 
 class CustomerSerializer(serializers.ModelSerializer):
-    lastOrderDate = serializers.SerializerMethodField()
+    last_order_date = serializers.SerializerMethodField()
     channel = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
-    # social_media = SocialMediaUserSerializer(many=True, source='social_media_users')
 
     class Meta:
         model = Customer
         fields = [
-            'id', 'name', 'email', 'phone', 'createdAt', 'orders_count',
-            'total_spent', 'lastOrderDate', 'status', 'channel', 'avatar',
-            # 'social_media'
+            'id', 'name', 'phone', 'city', 'police_station', 'area', 'orders_count',
+            'total_spent', 'status', 'avatar', 'channel', 'last_order_date', 'created_at', 'updated_at',
         ]
-        extra_kwargs = {
-            'createdAt': {'source': 'created_at'},
-        }
 
-    def get_lastOrderDate(self, obj):
+    def get_last_order_date(self, obj):
         last_order = obj.orders.order_by('-created_at').first()
-        if last_order:
-            return localtime(last_order.created_at).strftime("%b %d, %Y")
-        return None
+        return localtime(last_order.created_at).isoformat() if last_order else None
 
-    def get_channel(self, obj):
+    def get_channel(self, obj):  # method name matches field 'channel'
         platforms = set(smu.platform for smu in obj.social_media_users.all())
         if len(platforms) > 1:
             return 'both'
         return platforms.pop() if platforms else 'unknown'
 
     def get_avatar(self, obj):
-        # First try to get avatar from social media accounts
-        social_avatar = obj.social_media_users.filter(
-            avatar_url__isnull=False).first()
+        social_avatar = obj.social_media_users.filter(avatar_url__isnull=False).first()
         if social_avatar:
             return social_avatar.avatar_url
-
-        # Fallback to default avatar based on name
         return f"https://i.pravatar.cc/150?u={obj.name}"
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        # Format the total_spent as float instead of string
         data['total_spent'] = float(data['total_spent'])
-        # Format the created_at date
-        data['createdAt'] = localtime(
-            instance.created_at).strftime("%Y-%m-%dT%H:%M:%S")
         return data

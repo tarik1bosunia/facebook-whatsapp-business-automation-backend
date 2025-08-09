@@ -10,6 +10,7 @@ class Customer(models.Model):
     class Status(models.TextChoices):
         ACTIVE = 'active', _('Active')
         INACTIVE = 'inactive', _('Inactive')
+            
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="customers",)    
 
@@ -94,3 +95,17 @@ class Customer(models.Model):
         self.orders_count = stats['count'] or 0
         self.total_spent = stats['total'] or 0
         self.save(update_fields=['orders_count', 'total_spent'])
+        
+        
+    def get_platforms(self):
+        """Return list of platform codes linked to this customer"""
+        return list(self.social_media_users.values_list('platform', flat=True).distinct())
+    
+    def platform_status(self):
+        """Return readable platform status"""
+        platforms = self.get_platforms()
+        if not platforms:
+            return "Unknown"
+        if len(platforms) > 1:
+            return "Both"
+        return platforms[0].capitalize()    
