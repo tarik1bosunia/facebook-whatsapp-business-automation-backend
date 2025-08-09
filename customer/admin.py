@@ -1,16 +1,16 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import Customer, Order
+from .models import Customer, Order, OrderItem
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'name', 'email', 'phone', 'orders_count', 'total_spent', 'status', 'created_at')
+    list_display = ('id', 'user', 'name', 'phone', 'orders_count', 'total_spent', 'status', 'created_at')
     list_filter = ('status', 'created_at')
-    search_fields = ('name', 'email', 'phone')
+    search_fields = ('name', 'phone')
     readonly_fields = ('orders_count', 'total_spent', 'created_at', 'updated_at')
     fieldsets = (
         (None, {
-            'fields': ('user', 'name', 'email', 'phone', 'status')
+            'fields': ('user', 'name', 'phone', 'status')
         }),
         (_('Statistics'), {
             'fields': ('orders_count', 'total_spent')
@@ -59,3 +59,15 @@ class OrderAdmin(admin.ModelAdmin):
     def mark_as_refunded(self, request, queryset):
         queryset.update(payment_status=Order.PaymentStatus.REFUNDED)
     mark_as_refunded.short_description = _("Mark selected orders as refunded")
+
+
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order', 'product', 'quantity', 'total_price')
+    list_filter = ('order', 'product')
+    search_fields = ('order__order_number', 'product__name')
+    raw_id_fields = ('order', 'product')
+
+    def total_price(self, obj):
+        return obj.total_price
+    total_price.short_description = _('Total Price')

@@ -23,7 +23,7 @@ class Order(models.Model):
 
 
     order_number = models.CharField(
-        max_length=20,
+        max_length=30,
         unique=True,
         verbose_name=_('Order Number'),
         help_text=_("Unique identifier for the order"),

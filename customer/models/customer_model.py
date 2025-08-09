@@ -1,8 +1,7 @@
 from django.db import models
 from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
-
-# TODO: phone and email need to make it unique so that more than 1 customer can not use same email and phone
+from phonenumber_field.modelfields import PhoneNumberField
 
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -19,19 +18,33 @@ class Customer(models.Model):
         verbose_name=_('Name'),
         help_text=_("Customer's full name")
     )
-    email = models.EmailField(
-        null=True,
+    phone = PhoneNumberField(
         blank=True,
-        verbose_name=_('Email'),
-        help_text=_("Customer's email address")
-    )
-    phone = models.CharField(
-        max_length=20,
         null=True,
-        blank=True,
         verbose_name=_('Phone Number'),
-        help_text=_("Customer's contact number")
+        help_text=_("Customer's contact number (e.g., +12125552368)")
     )
+    
+    # --- Address Fields ---
+    city = models.CharField(
+        max_length=100,
+        verbose_name=_('City'),
+        help_text=_("Customer's city")
+    )
+    police_station = models.CharField(
+        max_length=255,
+        verbose_name=_('Police Station'),
+        help_text=_("Nearest police station for address reference")
+    )
+    area = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True, # Area is optional
+        verbose_name=_('Area/Street Address'),
+        help_text=_("Specific area or street address")
+    )
+    # --- End of Address Fields ---
+    
     orders_count = models.PositiveIntegerField(
         default=0,
         verbose_name=_('Orders Count'),
@@ -66,7 +79,6 @@ class Customer(models.Model):
         ordering = ['-updated_at']
         indexes = [
             models.Index(fields=['name']),
-            models.Index(fields=['email']),
             models.Index(fields=['status']),
         ]
 
