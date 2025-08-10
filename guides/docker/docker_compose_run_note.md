@@ -9,6 +9,7 @@ docker compose run --rm <service> <command>
 ```
 
 **Explanation**:
+
 - **`run`** → Starts a new **one-off container** from the service definition in your `docker-compose.yml`.
 - **`--rm`** → Automatically **removes** the container after the command finishes, preventing stopped containers from piling up.
 - **`<service>`** → The **service name** from your `docker-compose.yml` (not the container name).
@@ -23,7 +24,8 @@ docker compose run --rm server python manage.py makemigrations
 docker compose run --rm server python manage.py migrate
 ```
 
-### Steps Performed:
+### Steps Performed
+
 1. Create a **temporary container** based on the `server` service.
 2. Run the Django management command inside it.
 3. Remove the container automatically when done.
