@@ -51,7 +51,7 @@ class BaseMessageTypeHandler(ABC):
         )
 
     def generate_auto_reply(self) -> Optional[str]:
-        agent = ChatAgent(user=self.user, conversation=self.conversation)
+        agent = ChatAgent(user=self.user, conversation=self.conversation, social_user=self.socialuser)
         return async_to_sync(agent.get_response)(self.message)
 
     def should_auto_reply(self) -> bool:

@@ -60,9 +60,9 @@ class MessageHistoryManager:
             try:
                 content = msg.message[:4000] # Truncate long messages
                 if msg.sender == SENDER_CHOICES.CUSTOMER:
-                    await self.history.aadd_user_message(content)
+                    await self.history.add_message(HumanMessage(content=content))
                 else:
-                    await self.history.aadd_ai_message(content)
+                    await self.history.add_message(AIMessage(content=content))
             except Exception as e:
                 logger.warning(f"Failed to load message {msg.id}: {str(e)}")
 

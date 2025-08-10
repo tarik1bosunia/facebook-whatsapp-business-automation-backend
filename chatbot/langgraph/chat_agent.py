@@ -6,10 +6,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ChatAgent:
-    def __init__(self, user, conversation=None):
+    def __init__(self, user, conversation=None, social_user=None):
         self.user = user
         self.conversation = conversation
-        self.agent_core = AgentCore(user, conversation)
+        self.social_user = social_user
+        self.agent_core = AgentCore(user, conversation, social_user)
         self.history_manager = MessageHistoryManager(user, conversation)
 
     async def initialize(self):

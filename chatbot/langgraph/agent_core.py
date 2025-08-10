@@ -9,9 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class AgentCore:
-    def __init__(self, user, conversation=None):
+    def __init__(self, user, conversation=None, social_user=None):
         self.user = user
         self.conversation = conversation
+        self.social_user = social_user
         self.system_prompt = get_formatted_system_prompt(self.user)
         self._initialize_components()
 
@@ -23,7 +24,7 @@ class AgentCore:
         self.config = config_manager.get_ai_config()  
 
         # tools
-        self.tools = ToolManager.get_tools(user=self.user)
+        self.tools = ToolManager.get_tools(user=self.user, social_user=self.social_user)
 
         # LLM
         self.llm = LLMFactory.create_llm(
