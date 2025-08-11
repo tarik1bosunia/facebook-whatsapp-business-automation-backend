@@ -1,104 +1,52 @@
-# views.py
-from rest_framework import viewsets, permissions, status, generics, filters
-from business.models import BusinessProfile, BusinessHours
-from ..serializers import BusinessProfileSerializer, BusinessHoursSerializer
+from rest_framework import generics, viewsets, status
 from rest_framework.response import Response
+from ..models import BusinessProfile, BusinessHours
+from ..serializers import BusinessProfileSerializer, BusinessHoursSerializer
+from account.permissions import IsAuthenticatedAndVerified
 
-from rest_framework.exceptions import ValidationError
 
 class BusinessProfileView(generics.RetrieveUpdateAPIView):
+    """
+    GET /business-profile/ -> Retrieve profile (no hours)
+    PATCH /business-profile/ -> Update profile only
+    """
     serializer_class = BusinessProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticatedAndVerified]
+    http_method_names = ['get', 'patch']
 
     def get_object(self):
-        user = self.request.user
-        try:
-            return user.business
-        except BusinessProfile.DoesNotExist:
-            return None
-    def get(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if not instance:
-            return Response({'detail': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-    
-    def put(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance:
-            serializer = self.get_serializer(instance, data=request.data)
-        else:
-            serializer = self.get_serializer(data={**request.data, 'user': request.user.id})
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-        return Response(serializer.data)
-
-    # def retrieve(self, request):
-    #     profile = self.get_object()
-    #     if not profile:
-    #         return Response({'detail': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
-    #     serializer = BusinessProfileSerializer(profile)
-    #     return Response(serializer.data)
-    
+        return BusinessProfile.objects.get(user=self.request.user)
 
 
-    # def create(self, request):
-    #     if self.get_object():
-    #         return Response({'detail': 'Profile already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     serializer = BusinessProfileSerializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save(user=request.user)
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    # def update(self, request):
-    #     profile = self.get_object()
-    #     if not profile:
-    #         return Response({'detail': 'Profile not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-    #     serializer = BusinessProfileSerializer(profile, data=request.data, partial=True)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-    #     return Response(serializer.data)
-
-
-class BusinessHoursViewSet(viewsets.ModelViewSet):
+class BusinessHoursViewSet(viewsets.ViewSet):
+    """
+    Manage business hours separately from profile.
+    """
+    permission_classes = [IsAuthenticatedAndVerified]
     serializer_class = BusinessHoursSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = None
-    
 
     def get_queryset(self):
         return BusinessHours.objects.filter(business__user=self.request.user)
 
-    def perform_create(self, serializer):
-        business = BusinessProfile.objects.get(user=self.request.user)
-        day = serializer.validated_data['day']
-        instance, created = BusinessHours.objects.update_or_create(
-            business=business,
-            day=day,
-            defaults={
-                'open_time': serializer.validated_data.get('open_time'),
-                'close_time': serializer.validated_data.get('close_time'),
-                'is_closed': serializer.validated_data.get('is_closed', False),
-            }
-        )
-        serializer.instance = instance
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
-    # DEBUG
-    # def create(self, request, *args, **kwargs):
-    #     print("🔍 Incoming data to create():", request.data)
-    #     return super().create(request, *args, **kwargs)
+    def create(self, request):
+        business_profile = BusinessProfile.objects.get(user=request.user)
+        hours_data = request.data  # Expecting a list of hours objects
 
-    # def update(self, request, *args, **kwargs):
-    #     print("🔍 Incoming data to update():", request.data)
-    #     return super().update(request, *args, **kwargs)    
+        for hour_data in hours_data:
+            day = hour_data.get('day')
+            BusinessHours.objects.update_or_create(
+                business=business_profile,
+                day=day,
+                defaults={
+                    'open_time': hour_data.get('open_time'),
+                    'close_time': hour_data.get('close_time'),
+                    'is_closed': hour_data.get('is_closed', False),
+                }
+            )
 
-
-
-
-
-
-
-
-
+        return Response({"status": "Business hours updated"}, status=status.HTTP_200_OK)
