@@ -15,7 +15,8 @@ class BusinessProfileView(generics.RetrieveUpdateAPIView):
     http_method_names = ['get', 'patch']
 
     def get_object(self):
-        return BusinessProfile.objects.get(user=self.request.user)
+        profile, created = BusinessProfile.objects.get_or_create(user=self.request.user)
+        return profile
 
 
 class BusinessHoursViewSet(viewsets.ViewSet):
