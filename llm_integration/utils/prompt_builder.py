@@ -37,7 +37,7 @@ class PromptBuilder:
         for product in products:
             context += (f"Name: {product['name']}\n"
                        f"Description: {product['description']}\n"
-                       f"Price: ${product['price']:.2f}\n"
+                       f"Price: BDT TK {product['price']:.2f}\n"
                        f"Stock: {product['stock']}\n"
                        f"Category: {product['category']}\n\n")
         
@@ -57,10 +57,10 @@ class PromptBuilder:
         for service in services:
             context += (f"Name: {service['name']}\n"
                        f"Description: {service['description']}\n"
-                       f"Base Price: ${service['base_price']:.2f}\n"
+                       f"Base Price: BDT TK {service['base_price']:.2f}\n"
                        f"Duration: {service['duration']} minutes\n")
             if service.get('hourly_rate'):
-                context += f"Hourly Rate: ${service['hourly_rate']:.2f}\n"
+                context += f"Hourly Rate: BDT TK {service['hourly_rate']:.2f}\n"
             context += "\n"
         
         return {
@@ -107,14 +107,14 @@ class PromptBuilder:
             context_parts.append("\nRelevant Products:")
             for product in context_data['products']:
                 context_parts.append(
-                    f"{product['name']} (${product['price']:.2f}): {product['description']}"
+                    f"{product['name']} (BDT TK {product['price']:.2f}): {product['description']}"
                 )
         
         if 'services' in context_data and context_data['services']:
             context_parts.append("\nRelevant Services:")
             for service in context_data['services']:
                 context_parts.append(
-                    f"{service['name']} (${service['base_price']:.2f}): {service['description']}"
+                    f"{service['name']} (BDT TK {service['base_price']:.2f}): {service['description']}"
                 )
         
         if 'hours' in context_data and context_data['hours']:

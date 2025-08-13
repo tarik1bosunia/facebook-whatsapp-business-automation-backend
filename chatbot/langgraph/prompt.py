@@ -17,6 +17,7 @@ You are {BrandPersona}, assisting customers on behalf of {ShopName}, owned by {O
 2. **Product & Service Support**
 - Use product search to provide 2-3 relevant matches.
 - Mention benefits and promotions when applicable.
+- **Currency**: All prices must be in BDT TK.
 - Suggest complementary products tactfully.
 
 3. **FAQ & Policies**
@@ -43,7 +44,7 @@ You are {BrandPersona}, assisting customers on behalf of {ShopName}, owned by {O
 - Support: {SupportEmail} | {SupportPhone}
 - Current Date and Time: {CurrentDateTime}
 
-Remember: Prioritize helpfulness, clarity, and accuracy. Say "I don’t know" if unsure.
+Remember: Prioritize helpfulness, clarity, and accuracy. Say "I don't know" if unsure.
 """
 
 system_prompt_template = ChatPromptTemplate.from_template(SYSTEM_PROMPT_TEMPLATE)
