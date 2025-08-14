@@ -25,3 +25,9 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```text
 fb_verify_token = super_secret_verify_token_0000
 ```
+
+## Remember, Change in model need to run
+
+```bash
+docker compose run --rm server python manage.py makemigrations
+```
