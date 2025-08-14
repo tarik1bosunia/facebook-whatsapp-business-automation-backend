@@ -47,6 +47,7 @@ RUN adduser \
 # ---- Install system dependencies ----
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     libpq-dev \
+    postgresql-client \
     gcc \
     git \
     curl \
@@ -81,9 +82,12 @@ COPY . .
 RUN chown -R appuser:appuser /app
 
 
-# Remove all migration files except __init__.py during build
-RUN find . -path "*/migrations/*.py" ! -name "__init__.py" -delete && \
-    find . -path "*/migrations/*.pyc" -delete
+# Optional: strip migrations in dev builds only
+ARG REMOVE_MIGRATIONS=false
+RUN if [ "$REMOVE_MIGRATIONS" = "true" ]; then \
+      find . -path "*/migrations/*.py" ! -name "__init__.py" -delete && \
+      find . -path "*/migrations/*.pyc" -delete; \
+    fi
 
 
 # ---- Copy and fix entrypoint script ----
@@ -94,15 +98,15 @@ RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
 # RUN chown -R appuser:appuser /app
 USER appuser
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
-
 # Expose the port that the application listens on.
 EXPOSE 8000
 
 # Use a script for complex startup commands
 ENTRYPOINT ["/entrypoint.sh"]
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1
 
 # development
 # CMD python manage.py runserver 0.0.0.0:8000

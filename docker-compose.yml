@@ -1,15 +1,6 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker compose reference guide at
-# https://docs.docker.com/compose/compose-file/
-
-# Here the instructions define your application as a service called "server".
-# This service is built from the Dockerfile in the current directory.
-# You can add other services your application may depend on here, such as a
-# database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesome-compose
 name: fbaserver
 services:
-  init-perms:  # ✅ NEW service to create and fix permissions
+  init-perms:  # service to create and fix permissions
     image: alpine:3.20
     container_name: fba-init-container
     command: >
@@ -23,48 +14,48 @@ services:
       - /var/www/fbaserver/media:/media
     restart: "no"
   server:
-#    restart: unless-stopped
-#    image: ghcr.io/<USERNAME>/<REPO_NAME>/server:latest
+    # restart: unless-stopped
+    # image: ghcr.io/<USERNAME>/<REPO_NAME>/server:latest
     image: ghcr.io/tarik1bosunia/fbaserver:latest
     container_name: fbaserver-container
     # restart: unless-stopped
     build:
       context: .
+      args:
+        REMOVE_MIGRATIONS: "false"   # set "true" only for dev builds if needed
     volumes:
-      # ✅ Use absolute path for static & media volumes for Nginx + Django
+      # Use absolute path for static & media volumes for Nginx + Django
       - /var/www/fbaserver/static:/app/staticfiles      
       - /var/www/fbaserver/media:/app/media
       - ./.env:/app/.env
 
     env_file:
       - .env
-    ports:
-      - 8000:8000
-
-# The commented out section below is an example of how to define a PostgreSQL
-# database that your application can use. `depends_on` tells Docker Compose to
-# start the database before your application. The `db-data` volume persists the
-# database data between container restarts. The `db-password` secret is used
-# to set the database password. You must create `db/password.txt` and add
-# a password of your choosing to it before running `docker compose up`.
-    depends_on:
-      init-perms:  # ✅ Ensure volumes are ready before app runs
-        condition: service_completed_successfully
-      db:
-        condition: service_healthy
-      redis:  #  Wait for Redis to be ready before starting server
-        condition: service_started  
     environment:
       # Ensure these variables match the DATABASES setting in your Django settings.py file
+      - DJANGO_ENV=production
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}  # This should be the service name of the PostgreSQL container
+      - DB_HOST=${DB_HOST} # This should be the service name of the PostgreSQL container
       - DB_PORT=${DB_PORT}
       - REDIS_URL=${REDIS_URL}
       - DEBUG=${DEBUG} # Pass DEBUG from .env to the container
       #- REDIS_URL=redis://redis:6379/0  # Redis connection URL
       # - DJANGO_SETTINGS_MODULE=your_project.settings.production
+
+    ports:
+      - 8000:8000
+
+    depends_on:
+      init-perms:  # Ensure volumes are ready before app runs
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:  #  Wait for Redis to be ready before starting server
+        condition: service_started  
+
+
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
@@ -75,14 +66,7 @@ services:
     image: pgvector/pgvector:pg17 # https://hub.docker.com/r/pgvector/pgvector
     container_name: fba-postgres-container
     restart: always
-    hostname: ${DB_HOST}
-    ports:
-      - "5432:${DB_PORT}"
-    user: ${DB_USER}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql  # Load pgvector extension
-    
+
     env_file:
       - .env
 
@@ -90,10 +74,20 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
+
+    hostname: ${DB_HOST}
+    ports:
+      - "5432:${DB_PORT}"
+    # user: ${DB_USER}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql  # Load pgvector extension
+    
+
     expose:
       - 5432
     healthcheck:
-      test: [ "CMD", "pg_isready"]
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,7 +1,15 @@
+# docker-compose.dev.yml
 services:
   server:
     volumes:
-      - .:/app # Mount the current directory to /app in the container for live code changes
+      - .:/app
+      - ./.env:/app/.env
     environment:
-      - DJANGO_ENV=development # Set Django environment to development for hot-reloading
-    command: python manage.py runserver 0.0.0.0:8000
+      - DJANGO_ENV=development
+      - DEBUG=1
+    
+    # IMPORTANT: don't override command; entrypoint handles dev runserver
+    build:
+      context: .
+      args:
+        REMOVE_MIGRATIONS: "false"   # keep migrations in repo; dev uses --fake-initial anyway
